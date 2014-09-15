@@ -13,6 +13,7 @@ public:
     
     virtual double extract(double const * const * image) = 0;
     bool classify(double const * const * image);
+    int classify(double sample);
     virtual const char* name() = 0;
     
     inline int x() const {return x_;}

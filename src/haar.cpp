@@ -63,6 +63,15 @@ bool Haar::classify(double const * const * image)
     }
 }
 
+int Haar::classify(double sample)
+{
+    if (sample * parity_ > parity_ * threshold_) {
+	return 1;
+    } else {
+	return -1;
+    }
+}
+
 HaarHEdge::HaarHEdge(int x, int y, int width, int height)
     : Haar(x, y, width, height)
 {
