@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     int width = imageList[0].cols;
     int height = imageList[0].rows;
     
-    int scanStep = 2;
-    int sizeStep = 2;
+    int scanStep = 3;
+    int sizeStep = 3;
     
     std::vector<Haar*> haarFeatures = createHaarFeatures(width, height, scanStep, sizeStep);
     

@@ -10,19 +10,19 @@
 #include "haar.h"
 #include "filelib.h"
 
-int classify(double sample, int parity, double threshold)
+const int categoryNum = 2;
+const int category[2] = {1, -1};
+
+int classify(double sample, double parity, double threshold)
 {
-    if (sample * static_cast<double>(parity) > static_cast<double>(parity) * threshold)
-    {
-	return 1;
-    }
-    else
-    {
-	return -1;
+    if (sample * parity > parity * threshold) {
+	return category[0];
+    } else {
+	return category[1];
     }
 }
 
-double evaluateParameter(const double *sample, const int *label, const double *weight, int sampleNum, int &parity, double &threshold)
+double evaluateParameter(const double *sample, const int *label, const double *weight, int sampleNum, double &parity, double &threshold)
 {
     double *data = new double[sampleNum];
     int *index = new int[sampleNum];
@@ -51,16 +51,14 @@ double evaluateParameter(const double *sample, const int *label, const double *w
     double epsilon = std::numeric_limits<double>::max();
     for (int i = 0; i < sampleNum - 1; ++i)
     {
-	if (label[index[i]] == label[index[i + 1]])
-	{
+	if (label[index[i]] == label[index[i + 1]]) {
 	    continue;
 	}
-	if (data[i] == data[i + 1])
-	{
+	if (data[i] == data[i + 1]) {
 	    continue;
 	}
 	
-	int p = 1;
+	double p = 1.0;
 	double theta = (data[i] + data[i + 1]) / 2.0;
 	
 	double error = 0.0;
@@ -75,7 +73,7 @@ double evaluateParameter(const double *sample, const int *label, const double *w
 	if (error > 0.5)
 	{
 	    error = 1.0 - error;
-	    p = -1;
+	    p = -1.0;
 	}
 	
 	if (error < epsilon)
@@ -94,43 +92,42 @@ double evaluateParameter(const double *sample, const int *label, const double *w
 
 int main(int argc, char *argv[])
 {
-    std::vector<Haar*> haarFeatures = loadHaarFeatures("/Users/ynakamura/workspace/github/FaceRecognition/src/mit_cbcl.haar");
+    if (argc != 3)
+    {
+	std::cerr << "Usage: " << argv[0] << " <haar-param> <haar-dat>" << std::endl;
+	return -1;
+    }
     
-    std::vector<std::vector<double> > data = file::loadfile<double>("/Users/ynakamura/workspace/github/FaceRecognition/src/mit_cbcl.dat", ' ');
+    std::vector<Haar*> haarFeatures = loadHaarFeatures(argv[1]);
+    
+    std::vector<std::vector<double> > data = file::loadfile<double>(argv[2], ' ', true);
     
     int classifierNum = data.size() - 1;
     int sampleNum = data[0].size();
     
     double **sample = new double*[classifierNum];
-    for (int i = 0; i < classifierNum; ++i)
-    {
+    for (int i = 0; i < classifierNum; ++i) {
 	sample[i] = new double[sampleNum];
-	for (int j = 0; j < sampleNum; ++j)
-	{
+	for (int j = 0; j < sampleNum; ++j) {
 	    sample[i][j] = data[i][j];
 	}
     }
     
-    const int category[2] = {1, -1};
-    int sampleNumPerCategory[2] = {0, 0};
+    int sampleNumPerCategory[categoryNum] = {0, 0};
     
     int *label = new int[sampleNum];
     for (int i = 0; i < sampleNum; ++i)
     {
 	label[i] = static_cast<int>(data[data.size() - 1][i]);
-	if (label[i] == 1)
-	{
+	if (label[i] == category[0]) {
 	    sampleNumPerCategory[0]++;
-	}
-	else
-	{
+	} else {
 	    sampleNumPerCategory[1]++;
 	}
     }
     
 #ifdef _DEBUG
-    for (int i = 0; i < sampleNum; ++i)
-    {
+    for (int i = 0; i < sampleNum; ++i) {
 	std::cout << label[i] << " ";
     }
     std::cout << std::endl;
@@ -139,12 +136,9 @@ int main(int argc, char *argv[])
     double *weight = new double[sampleNum];
     for (int i = 0; i < sampleNum; ++i)
     {
-	if (label[i] == 1)
-	{
+	if (label[i] == 1) {
 	    weight[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[0]);
-	}
-	else
-	{
+	} else {
 	    weight[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[1]);
 	}
     }
@@ -153,7 +147,7 @@ int main(int argc, char *argv[])
     
     int weakClassifierNum = 110;
     int *weakClassifier = new int[weakClassifierNum];
-    int *parity = new int[weakClassifierNum];
+    double *parity = new double[weakClassifierNum];
     double *threshold = new double[weakClassifierNum];
     double *alpha = new double[weakClassifierNum];
     
@@ -172,7 +166,7 @@ int main(int argc, char *argv[])
 	double epsilon = std::numeric_limits<double>::max();
 	for (int j = 0; j < classifierNum; ++j)
 	{
-	    int p = 1;
+	    double p = 1.0;
 	    double theta = 0.0;
 	    double error = evaluateParameter(sample[j], label, weight, sampleNum, p, theta);
 	    if (error < epsilon)
@@ -218,18 +212,20 @@ int main(int argc, char *argv[])
     delete[] threshold;
     delete[] alpha;
     
-    for (int i = 0; i < classifierNum; ++i)
-    {
+    for (int i = 0; i < classifierNum; ++i) {
 	delete[] sample[i];
     }
     delete[] sample;
     delete[] label;
     delete[] weight;
     
-    /*for (size_t i = 0; i < haarFeatures.size(); ++i)
-    {
+    for (size_t i = 0; i < haarFeatures.size(); ++i) {
 	delete haarFeatures[i];
-    }*/
+    }
+    
+    for (size_t i = 0; i < strongClassifier.size(); ++i) {
+	delete strongClassifier[i];
+    }
     
     return 0;
 }

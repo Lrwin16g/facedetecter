@@ -56,12 +56,9 @@ Haar::Haar(int x, int y, int width, int height, double weight, double parity, do
 bool Haar::classify(double const * const * image)
 {
     extract(image);
-    if (value_ * parity_ > parity_ * threshold_)
-    {
+    if (value_ * parity_ > parity_ * threshold_) {
 	return true;
-    }
-    else
-    {
+    } else {
 	return false;
     }
 }
@@ -93,11 +90,9 @@ const char* HaarHEdge::name()
 
 bool HaarHEdge::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
 {
-    if ((x + width * 2 < rectWidth) && (y + height < rectHeight))
-    {
+    if ((x + width * 2 < rectWidth) && (y + height < rectHeight)) {
 	return true;
-    } else
-    {
+    } else {
 	return false;
     }
 }
@@ -129,11 +124,9 @@ const char* HaarVEdge::name()
 
 bool HaarVEdge::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
 {
-    if ((x + width < rectWidth) && (y + height * 2 < rectHeight))
-    {
+    if ((x + width < rectWidth) && (y + height * 2 < rectHeight)) {
 	return true;
-    } else
-    {
+    } else {
 	return false;
     }
 }
@@ -166,11 +159,9 @@ const char* HaarHLine::name()
 
 bool HaarHLine::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
 {
-    if ((x + width * 3 < rectWidth) && (y + height < rectHeight))
-    {
+    if ((x + width * 3 < rectWidth) && (y + height < rectHeight)) {
 	return true;
-    } else
-    {
+    } else {
 	return false;
     }
 }
@@ -203,11 +194,9 @@ const char* HaarVLine::name()
 
 bool HaarVLine::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
 {
-    if ((x + width < rectWidth) && (y + height * 3 < rectHeight))
-    {
+    if ((x + width < rectWidth) && (y + height * 3 < rectHeight)) {
 	return true;
-    } else
-    {
+    } else {
 	return false;
     }
 }
@@ -215,28 +204,20 @@ bool HaarVLine::isValidRange(int x, int y, int width, int height, int rectWidth,
 std::vector<Haar*> createHaarFeatures(int width, int height, int scanStep, int sizeStep)
 {
     std::vector<Haar*> haarFeatures;
-    for (int y = 1; y < height; y += scanStep)
-    {
-	for (int x = 1; x < width; x += scanStep)
-	{
-	    for (int h = 1; h < height; h += sizeStep)
-	    {
-		for (int w = 1; w < width; w += sizeStep)
-		{
-		    if (HaarHEdge::isValidRange(x, y, w, h, width, height))
-		    {
+    for (int y = 1; y < height; y += scanStep) {
+	for (int x = 1; x < width; x += scanStep) {
+	    for (int h = 1; h < height; h += sizeStep) {
+		for (int w = 1; w < width; w += sizeStep) {
+		    if (HaarHEdge::isValidRange(x, y, w, h, width, height)) {
 			haarFeatures.push_back(new HaarHEdge(x, y, w, h));
 		    }
-		    if (HaarVEdge::isValidRange(x, y, w, h, width, height))
-		    {
+		    if (HaarVEdge::isValidRange(x, y, w, h, width, height)) {
 			haarFeatures.push_back(new HaarVEdge(x, y, w, h));
 		    }
-		    if (HaarHLine::isValidRange(x, y, w, h, width, height))
-		    {
+		    if (HaarHLine::isValidRange(x, y, w, h, width, height)) {
 			haarFeatures.push_back(new HaarHLine(x, y, w, h));
 		    }
-		    if (HaarVLine::isValidRange(x, y, w, h, width, height))
-		    {
+		    if (HaarVLine::isValidRange(x, y, w, h, width, height)) {
 			haarFeatures.push_back(new HaarVLine(x, y, w, h));
 		    }
 		}
