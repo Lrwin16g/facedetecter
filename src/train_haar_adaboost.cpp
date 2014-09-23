@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "haar.h"
+#include "adaboost.h"
 #include "filelib.h"
 
 const int categoryNum = 2;
@@ -98,7 +99,47 @@ int main(int argc, char *argv[])
 	return -1;
     }
     
-    std::vector<Haar*> haarFeatures = loadHaarFeatures(argv[1]);
+    std::vector<Haar> haar = loadHaarFeatures(argv[1]);
+#ifdef _DEBUG
+    std::cout << "haarNum: " << haar.size() << std::endl;
+#endif
+    
+    std::string datname = argv[2];
+    std::string labelname = datname;
+    std::string ext = ".label";
+    labelname.replace(labelname.rfind(".dat"), ext.length(), ext);
+    
+    std::vector<int> labelvec = file::loadfile<int>(labelname.c_str(), false);
+    size_t sampleNum = labelvec.size();
+    
+    std::vector<std::vector<double> > data = file::loadfile<double>(datname.c_str(), sampleNum, true);
+    size_t classifierNum = data.size();
+    
+#ifdef _DEBUG
+    std::cout << "classifierNum: " << classifierNum << std::endl;
+    std::cout << "sampleNum: " << sampleNum << std::endl;
+#endif
+    
+    double **sample = new double*[classifierNum];
+    for (int i = 0; i < classifierNum; ++i) {
+	sample[i] = new double[sampleNum];
+	for (int j = 0; j < sampleNum; ++j) {
+	    sample[i][j] = data[i][j];
+	}
+    }
+    
+    int *label = new int[sampleNum];
+    for (int i = 0; i < sampleNum; ++i) {
+	label[i] = labelvec[i];
+    }
+    
+    AdaBoost boost(classifierNum, sampleNum);
+    boost.initializeWeight(label);
+    
+    boost.train(sample, label, haar);
+    
+    
+    /*std::vector<Haar*> haarFeatures = loadHaarFeatures(argv[1]);
     
     std::vector<std::vector<double> > data = file::loadfile<double>(argv[2], ' ', true);
     
@@ -225,7 +266,13 @@ int main(int argc, char *argv[])
     
     for (size_t i = 0; i < strongClassifier.size(); ++i) {
 	delete strongClassifier[i];
+    }*/
+    
+    for (int i = 0; i < classifierNum; ++i) {
+	delete[] sample[i];
     }
+    delete[] sample;
+    delete[] label;
     
     return 0;
 }

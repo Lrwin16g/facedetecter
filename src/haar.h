@@ -25,6 +25,9 @@ public:
     inline double parity()    const { return parity_; }
     inline double threshold() const { return threshold_; }
     
+    inline void setParity(double parity)	{ parity_ = parity; }
+    inline void setThreshold(double threshold)	{ threshold_ = threshold; }
+    
 private:
     int type_;
     int x_, y_;

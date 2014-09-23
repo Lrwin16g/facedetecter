@@ -2,25 +2,31 @@
 #define ADABOOST_H
 
 #include <vector>
-
-class Haar;
+#include "haar.h"
 
 class AdaBoost
 {
 public:
-    AdaBoost();
+    AdaBoost(int classifierNum, int sampleNum);
     ~AdaBoost();
-    void train(double **sample, int *label, std::vector<Haar*> &candidate, int sampleNum, int classifierNum);
+    
+    void initializeWeight(const int *label);
+    void train(const double * const *sample, const int *label, const std::vector<Haar> &candidate);
     
 private:
+    void normalizeWeight();
+    int classify(double sample, double parity, double threshold);
+    double evaluateParameter(const double *sample, const int *label, double &parity, double &threshold);
+    
     int classifierNum_;
     int sampleNum_;
-    const int categoryNum_ = 2;
-    const int category_[2] = {1, -1};
+    int category_[2];
     
-    std::vector<Haar*> classifier_;
-    double *weight_;
+    std::vector<Haar> classifier_;
     double *alpha_;
+    double *weight_;
+    double *data_;
+    int *index_;
 };
 
 #endif
