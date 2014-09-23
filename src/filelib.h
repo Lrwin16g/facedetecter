@@ -9,15 +9,51 @@
 
 namespace file
 {
-    std::vector<std::string> split(const std::string &str, const char delim);
+    std::vector<std::string> split(const std::string &str, const char *delim);
+
+    std::vector<std::string> loadfile(const char *filename);
+
+    std::vector<std::vector<std::string> > loadfile(const char *filename, const char *delim);
     
     template<typename T>
-    std::vector<std::vector<T> > loadfile(const char *filename, const char delim = ' ', bool verbose = false)
+    std::vector<T> loadfile(const char *filename, bool isBin)
+    {
+	std::ifstream ifs;
+	std::vector<T> data;
+	if (isBin)
+	{
+	    ifs.open(filename, std::ios::binary);
+	    T elem;
+	    while (true)
+	    {
+		ifs.read(reinterpret_cast<char*>(&elem), sizeof(T));
+		data.push_back(elem);
+		if (ifs.eof()) {
+		    break;
+		}
+	    }
+	} else {
+	    ifs.open(filename);
+	    std::string line;
+	    while (std::getline(ifs, line))
+	    {
+		std::istringstream iss(line);
+		T elem;
+		iss >> elem;
+		data.push_back(elem);
+	    }
+	}
+	ifs.close();
+	
+	return data;
+    };
+    
+    template<typename T>
+    std::vector<std::vector<T> > loadfile(const char *filename, const char *delim, bool verbose = false)
     {
 	std::ifstream ifs(filename);
 	std::vector<std::vector<T> > data;
 	std::string str;
-	int count = 0;
 	while (std::getline(ifs, str))
 	{
 	    std::vector<std::string> token = split(str, delim);
@@ -30,12 +66,10 @@ namespace file
 		elem[i] = value;
 	    }
 	    data.push_back(elem);
-	    count++;
-	    if (verbose)
-	    {
-		if (count % 100 == 0)
-		{
-		    std::cout << count << std::endl;
+	    
+	    if (verbose) {
+		if (data.size() % 100 == 0) {
+		    std::cout << data.size() << std::endl;
 		}
 	    }
 	}
@@ -43,7 +77,112 @@ namespace file
 	return data;
     };
     
-    std::vector<std::string> loadfile(const char *filename);
+    template<typename T>
+    std::vector<std::vector<T> > loadfile(const char *filename, int col, bool verbose = false)
+    {
+	std::ifstream ifs(filename, std::ios::binary);
+	std::vector<std::vector<T> > data;
+	while (true)
+	{
+	    std::vector<T> line(col);
+	    for (int i = 0; i < col; ++i)
+	    {
+		T elem;
+		ifs.read(reinterpret_cast<char*>(&elem), sizeof(T));
+		line[i] = elem;
+	    }
+	    data.push_back(line);
+	    if (ifs.eof()) {
+		break;
+	    }
+	    
+	    if (verbose) {
+		if (data.size() % 100 == 0) {
+		    std::cout << data.size() << std::endl;
+		}
+	    }
+	}
+	ifs.close();
+	
+	return data;
+    };
+    
+    template<typename T>
+    void savefile(const char *filename, const std::vector<T> &data, bool isBin)
+    {
+	std::ofstream ofs;
+	if (isBin)
+	{
+	    ofs.open(filename, std::ios::binary);
+	    for (size_t i = 0; i < data.size(); ++i)
+	    {
+		ofs.write(reinterpret_cast<char*>(&data[i]), sizeof(T));
+	    }
+	} else {
+	    ofs.open(filename);
+	    for (size_t i = 0; i < data.size(); ++i)
+	    {
+		ofs << data[i] << std::endl;
+	    }
+	}
+	ofs.close();
+    };
+    
+    template<typename T>
+    void savefile(const char *filename, const std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ")
+    {
+	std::ofstream ofs;
+	if (isBin)
+	{
+	    ofs.open(filename, std::ios::binary);
+	    for (size_t i = 0; i < data.size(); ++i)
+	    {
+		for (size_t j = 0; j < data[i].size(); ++j)
+		{
+		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
+		}
+	    }
+	} else {
+	    ofs.open(filename);
+	    for (size_t i = 0; i < data.size(); ++i)
+	    {
+		for (size_t j = 0; j < data[i].size() - 1; ++j)
+		{
+		    ofs << data[i][j] << delim;
+		}
+		ofs << data[i][data[i].size() - 1] << std::endl;
+	    }
+	}
+	ofs.close();
+    };
+    
+    template<typename T>
+    void savefile(const char *filename, const T **data, int row, int col, bool isBin, const char *delim = " ")
+    {
+	std::ofstream ofs;
+	if (isBin)
+	{
+	    ofs.open(filename, std::ios::binary);
+	    for (int i = 0; i < row; ++i)
+	    {
+		for (int j = 0; j < col; ++j)
+		{
+		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
+		}
+	    }
+	} else {
+	    ofs.open(filename);
+	    for (int i = 0; i < row; ++i)
+	    {
+		for (int j = 0; j < col - 1; ++j)
+		{
+		    ofs << data[i][j] << delim;
+		}
+		ofs << data[i][col - 1] << std::endl;
+	    }
+	}
+	ofs.close();
+    };
 };
 
 #endif

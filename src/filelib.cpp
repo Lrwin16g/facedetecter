@@ -1,6 +1,6 @@
 #include "filelib.h"
 
-std::vector<std::string> file::split(const std::string &str, const char delim)
+std::vector<std::string> file::split(const std::string &str, const char *delim)
 {
     std::string::size_type i = 0;
     std::string::size_type j = str.find(delim);
@@ -24,13 +24,28 @@ std::vector<std::string> file::split(const std::string &str, const char delim)
 
 std::vector<std::string> file::loadfile(const char *filename)
 {
-    std::vector<std::string> list;
+    std::vector<std::string> data;
     std::ifstream ifs(filename);
     std::string line;
     while (std::getline(ifs, line))
     {
-	list.push_back(line);
+	data.push_back(line);
     }
     
-    return list;
+    return data;
+}
+
+std::vector<std::vector<std::string> > file::loadfile(const char *filename, const char *delim)
+{
+    std::ifstream ifs(filename);
+    std::vector<std::vector<std::string> > data;
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+	std::vector<std::string> tokens = split(line.substr(0, line.length()), delim);
+	data.push_back(tokens);
+    }
+    ifs.close();
+    
+    return data;
 }

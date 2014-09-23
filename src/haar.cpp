@@ -5,42 +5,9 @@
 #include <string>
 #include <cstdlib>
 
+#include "filelib.h"
+
 const int TypeNum = 5;
-
-std::vector<std::string> split(const std::string &str, const char delim)
-{
-    std::string::size_type i = 0;
-    std::string::size_type j = str.find(delim);
-    
-    std::vector<std::string> result;
-    
-    while (j != std::string::npos) {
-	result.push_back(str.substr(i, j - i));
-        i = ++j;
-        j = str.find(delim, j);
-        
-        if (j == std::string::npos) {
-	    result.push_back(str.substr(i, str.length()));
-	}
-    }
-    
-    return result;
-}
-
-std::vector<std::vector<std::string> > loadfile(const char *filename, const char delim)
-{
-    std::ifstream ifs(filename);
-    std::vector<std::vector<std::string> > data;
-    std::string line;
-    while (std::getline(ifs, line))
-    {
-	std::vector<std::string> tokens = split(line.substr(0, line.length()), delim);
-	data.push_back(tokens);
-    }
-    ifs.close();
-    
-    return data;
-}
 
 Haar::Haar(int type, int x, int y, int width, int height, double parity, double threshold)
     : type_(type), x_(x), y_(y), width_(width), height_(height),
@@ -205,7 +172,7 @@ std::vector<Haar> createHaarFeatures(int width, int height, int scanStep, int si
 
 std::vector<Haar> loadHaarFeatures(const char *filename)
 {
-    std::vector<std::vector<std::string> > str = loadfile(filename, ' ');
+    std::vector<std::vector<std::string> > str = file::loadfile(filename, " ");
     std::vector<Haar> haar;
     
     for (size_t i = 0; i < str.size(); ++i)
