@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <cstdlib>
+
+const int TypeNum = 5;
 
 std::vector<std::string> split(const std::string &str, const char delim)
 {
@@ -41,256 +42,201 @@ std::vector<std::vector<std::string> > loadfile(const char *filename, const char
     return data;
 }
 
-Haar::Haar(int x, int y, int width, int height)
-    : x_(x), y_(y), width_(width), height_(height),
-      value_(0.0), weight_(0.0), parity_(0.0), threshold_(0.0)
+Haar::Haar(int type, int x, int y, int width, int height, double parity, double threshold)
+    : type_(type), x_(x), y_(y), width_(width), height_(height),
+      parity_(parity), threshold_(threshold)
 {
 }
 
-Haar::Haar(int x, int y, int width, int height, double weight, double parity, double threshold)
-    : x_(x), y_(y), width_(width), height_(height),
-      value_(0.0), weight_(weight), parity_(parity), threshold_(threshold)
+Haar::Haar(const Haar &obj)
 {
+    type_ = obj.type();
+    x_ = obj.x();
+    y_ = obj.y();
+    width_ = obj.width();
+    height_ = obj.height();
+    parity_ = obj.parity();
+    threshold_ = obj.threshold();
+}
+
+Haar::~Haar()
+{
+}
+
+double Haar::extract(double const * const * image)
+{
+    double value;
+    double white_1, white_2;
+    double black_1, black_2;
+    
+    switch (type_)
+    {
+    case 0:	// HaarHEdge
+	white_1 = calcLuminance(image, x_, y_, width_, height_);
+	black_1 = calcLuminance(image, x_ + width_, y_, width_, height_);
+	value = (white_1 - black_1) / static_cast<double>(width_ * height_);
+	break;
+    
+    case 1:	// HaarVEdge
+	white_1 = calcLuminance(image, x_, y_, width_, height_);
+	black_1 = calcLuminance(image, x_, y_ + height_, width_, height_);
+	value = (white_1 - black_1) / static_cast<double>(width_ * height_);
+	break;
+    
+    case 2:	// HaarHLine
+	white_1 = calcLuminance(image, x_, y_, width_ * 3, height_);
+	black_1 = calcLuminance(image, x_ + width_, y_, width_, height_);
+	value = (white_1 - 2.0 * black_1) / static_cast<double>(width_ * height_);
+	break;
+    
+    case 3:	// HaarVLine
+	white_1 = calcLuminance(image, x_, y_, width_, height_ * 3);
+	black_1 = calcLuminance(image, x_, y_ + height_, width_, height_);
+	value = (white_1 - 2.0 * black_1) / static_cast<double>(width_ * height_);
+	break;
+    
+    case 4:	// HaarChecker
+	white_1 = calcLuminance(image, x_, y_, width_ * 2, height_ * 2);
+	black_1 = calcLuminance(image, x_ + width_, y_, width_, height_);
+	black_2 = calcLuminance(image, x_, y_ + height_, width_, height_);
+	value = (white_1 - 2.0 * (black_1 + black_2)) / static_cast<double>(width_ * height_);
+	break;
+    }
+    
+    return value;
 }
 
 bool Haar::classify(double const * const * image)
 {
-    extract(image);
-    if (value_ * parity_ > parity_ * threshold_) {
+    double value = extract(image);
+    if (value * parity_ > parity_ * threshold_) {
 	return true;
     } else {
 	return false;
     }
 }
 
-int Haar::classify(double sample)
+bool Haar::isValidRange(int type, int x, int y, int width, int height, int rectWidth, int rectHeight)
 {
-    if (sample * parity_ > parity_ * threshold_) {
-	return 1;
-    } else {
-	return -1;
+    switch (type)
+    {
+    case 0:	// HaarHEdge
+	if ((x + width * 2 < rectWidth) && (y + height < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
+    
+    case 1:	// HaarVEdge
+	if ((x + width < rectWidth) && (y + height * 2 < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
+    
+    case 2:	// HaarHLine
+	if ((x + width * 3 < rectWidth) && (y + height < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
+    
+    case 3:	// HaarVLine
+	if ((x + width < rectWidth) && (y + height * 3 < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
+    
+    case 4:	// HaarChecker
+	if ((x + width * 2 < rectWidth) && (y + height * 2 < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
     }
-}
-
-HaarHEdge::HaarHEdge(int x, int y, int width, int height)
-    : Haar(x, y, width, height)
-{
-}
-
-HaarHEdge::HaarHEdge(int x, int y, int width, int height, double weight, double parity, double threshold)
-    : Haar(x, y, width, height, weight, parity, threshold)
-{
-}
-
-double HaarHEdge::extract(double const * const * image)
-{
-    double white = calcLuminance(image, x_, y_, width_, height_) / static_cast<double>(width_ * height_);
-    double black = calcLuminance(image, x_ + width_, y_, width_, height_) / static_cast<double>(width_ * height_);
     
-    value_ = white - black;
+    return false;
+}
+
+Haar& Haar::operator=(const Haar &obj)
+{
+    type_ = obj.type();
+    x_ = obj.x();
+    y_ = obj.y();
+    width_ = obj.width();
+    height_ = obj.height();
+    parity_ = obj.parity();
+    threshold_ = obj.threshold();
     
-    return value_;
+    return *this;
 }
 
-const char* HaarHEdge::name()
+std::vector<Haar> createHaarFeatures(int width, int height, int scanStep, int sizeStep)
 {
-    return "HaarHEdge";
-}
-
-bool HaarHEdge::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
-{
-    if ((x + width * 2 < rectWidth) && (y + height < rectHeight)) {
-	return true;
-    } else {
-	return false;
-    }
-}
-
-HaarVEdge::HaarVEdge(int x, int y, int width, int height)
-     : Haar(x, y, width, height)
-{
-}
-
-HaarVEdge::HaarVEdge(int x, int y, int width, int height, double weight, double parity, double threshold)
-    : Haar(x, y, width, height, weight, parity, threshold)
-{
-}
-
-double HaarVEdge::extract(double const * const * image)
-{
-    double white = calcLuminance(image, x_, y_, width_, height_) / static_cast<double>(width_ * height_);
-    double black = calcLuminance(image, x_, y_ + height_, width_, height_) / static_cast<double>(width_ * height_);
-    
-    value_ = white - black;
-    
-    return value_;
-}
-
-const char* HaarVEdge::name()
-{
-    return "HaarVEdge";
-}
-
-bool HaarVEdge::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
-{
-    if ((x + width < rectWidth) && (y + height * 2 < rectHeight)) {
-	return true;
-    } else {
-	return false;
-    }
-}
-
-HaarHLine::HaarHLine(int x, int y, int width, int height)
-     : Haar(x, y, width, height)
-{
-}
-
-HaarHLine::HaarHLine(int x, int y, int width, int height, double weight, double parity, double threshold)
-    : Haar(x, y, width, height, weight, parity, threshold)
-{
-}
-
-double HaarHLine::extract(double const * const * image)
-{
-    double white_1 = calcLuminance(image, x_, y_, width_, height_) / static_cast<double>(width_ * height_);
-    double black = calcLuminance(image, x_ + width_, y_, width_, height_) / static_cast<double>(width_ * height_);
-    double white_2 = calcLuminance(image, x_ + width_ * 2, y_, width_, height_) / static_cast<double>(width_ * height_);
-    
-    value_ = white_1 + white_2 - black;
-    
-    return value_;
-}
-
-const char* HaarHLine::name()
-{
-    return "HaarHLine";
-}
-
-bool HaarHLine::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
-{
-    if ((x + width * 3 < rectWidth) && (y + height < rectHeight)) {
-	return true;
-    } else {
-	return false;
-    }
-}
-
-HaarVLine::HaarVLine(int x, int y, int width, int height)
-     : Haar(x, y, width, height)
-{
-}
-
-HaarVLine::HaarVLine(int x, int y, int width, int height, double weight, double parity, double threshold)
-    : Haar(x, y, width, height, weight, parity, threshold)
-{
-}
-
-double HaarVLine::extract(double const * const * image)
-{
-    double white_1 = calcLuminance(image, x_, y_, width_, height_) / static_cast<double>(width_ * height_);
-    double black = calcLuminance(image, x_, y_ + height_, width_, height_) / static_cast<double>(width_ * height_);
-    double white_2 = calcLuminance(image, x_, y_ + height_ * 2, width_, height_) / static_cast<double>(width_ * height_);
-    
-    value_ = white_1 + white_2 - black;
-    
-    return value_;
-}
-
-const char* HaarVLine::name()
-{
-    return "HaarVLine";
-}
-
-bool HaarVLine::isValidRange(int x, int y, int width, int height, int rectWidth, int rectHeight)
-{
-    if ((x + width < rectWidth) && (y + height * 3 < rectHeight)) {
-	return true;
-    } else {
-	return false;
-    }
-}
-
-std::vector<Haar*> createHaarFeatures(int width, int height, int scanStep, int sizeStep)
-{
-    std::vector<Haar*> haarFeatures;
-    for (int y = 1; y < height; y += scanStep) {
-	for (int x = 1; x < width; x += scanStep) {
-	    for (int h = 1; h < height; h += sizeStep) {
-		for (int w = 1; w < width; w += sizeStep) {
-		    if (HaarHEdge::isValidRange(x, y, w, h, width, height)) {
-			haarFeatures.push_back(new HaarHEdge(x, y, w, h));
-		    }
-		    if (HaarVEdge::isValidRange(x, y, w, h, width, height)) {
-			haarFeatures.push_back(new HaarVEdge(x, y, w, h));
-		    }
-		    if (HaarHLine::isValidRange(x, y, w, h, width, height)) {
-			haarFeatures.push_back(new HaarHLine(x, y, w, h));
-		    }
-		    if (HaarVLine::isValidRange(x, y, w, h, width, height)) {
-			haarFeatures.push_back(new HaarVLine(x, y, w, h));
+    std::vector<Haar> haar;
+    for (int y = 1; y < height; y += scanStep)
+    {
+	for (int x = 1; x < width; x += scanStep)
+	{
+	    for (int h = 1; h < height; h += sizeStep)
+	    {
+		for (int w = 1; w < width; w += sizeStep)
+		{
+		    for (int t = 0; t < TypeNum; ++t)
+		    {
+			if (Haar::isValidRange(t, x, y, w, h, width, height))
+			{
+			    haar.push_back(Haar(t, x, y, w, h, 0.0, 0.0));
+			}
 		    }
 		}
 	    }
 	}
     }
-    return haarFeatures;
+    
+    return haar;
 }
 
-std::vector<Haar*> loadHaarFeatures(const char *filename)
+std::vector<Haar> loadHaarFeatures(const char *filename)
 {
     std::vector<std::vector<std::string> > str = loadfile(filename, ' ');
-    std::vector<Haar*> haarFeatures;
+    std::vector<Haar> haar;
+    
     for (size_t i = 0; i < str.size(); ++i)
     {
-	std::string name = str[i][0];
-	if (name == "HaarHEdge")
-	{
-	    if (str[i].size() > 5) {
-		haarFeatures.push_back(new HaarHEdge(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str()), atof(str[i][5].c_str()), atof(str[i][6].c_str()), atof(str[i][7].c_str())));
-	    } else {
-		haarFeatures.push_back(new HaarHEdge(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str())));
-	    }
-	}
-	else if (name == "HaarVEdge")
-	{
-	    if (str[i].size() > 5) {
-		haarFeatures.push_back(new HaarVEdge(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str()), atof(str[i][5].c_str()), atof(str[i][6].c_str()), atof(str[i][7].c_str())));
-	    } else {
-		haarFeatures.push_back(new HaarVEdge(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str())));
-	    }
-	}
-	else if (name == "HaarHLine")
-	{
-	    if (str[i].size() > 5) {
-		haarFeatures.push_back(new HaarHLine(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str()), atof(str[i][5].c_str()), atof(str[i][6].c_str()), atof(str[i][7].c_str())));
-	    } else {
-		haarFeatures.push_back(new HaarHLine(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str())));
-	    }
-	}
-	else if (name == "HaarVLine")
-	{
-	    if (str[i].size() > 5) {
-		haarFeatures.push_back(new HaarVLine(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str()), atof(str[i][5].c_str()), atof(str[i][6].c_str()), atof(str[i][7].c_str())));
-	    } else {
-		haarFeatures.push_back(new HaarVLine(atoi(str[i][1].c_str()), atoi(str[i][2].c_str()), atoi(str[i][3].c_str()), atoi(str[i][4].c_str())));
-	    }
-	}
-	else
-	{
-	    std::cerr << "Error: cannot load Haar-like Feature" << std::endl;
-	}
+	int    type      = atoi(str[i][0].c_str());
+	int    x         = atoi(str[i][1].c_str());
+	int    y         = atoi(str[i][2].c_str());
+	int    width     = atoi(str[i][3].c_str());
+	int    height    = atoi(str[i][4].c_str());
+	double parity    = atof(str[i][5].c_str());
+	double threshold = atof(str[i][6].c_str());
+	
+	haar.push_back(Haar(type, x, y, width, height, parity, threshold));
     }
-    return haarFeatures;
+    
+    return haar;
 }
 
-void saveHaarFeatures(const char *filename, std::vector<Haar*> &haarFeatures)
+void saveHaarFeatures(const char *filename, const std::vector<Haar> &haar)
 {
     std::ofstream fout(filename);
-    for (size_t i = 0; i < haarFeatures.size(); ++i)
+    for (size_t i = 0; i < haar.size(); ++i)
     {
-	fout << haarFeatures[i]->name() << " " << haarFeatures[i]->x() << " "
-	     << haarFeatures[i]->y() << " " << haarFeatures[i]->width() << " "
-	     << haarFeatures[i]->height() << std::endl;
+	fout << haar[i].type() << " "
+	     << haar[i].x() << " "
+	     << haar[i].y() << " "
+	     << haar[i].width() << " "
+	     << haar[i].height() << " "
+	     << haar[i].parity() << " "
+	     << haar[i].threshold() << " "
+	     << std::endl;
     }
     fout.close();
 }

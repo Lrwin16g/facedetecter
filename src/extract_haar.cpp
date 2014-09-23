@@ -43,10 +43,10 @@ int main(int argc, char *argv[])
     int scanStep = 3;
     int sizeStep = 3;
     
-    std::vector<Haar*> haarFeatures = createHaarFeatures(width, height, scanStep, sizeStep);
+    std::vector<Haar> haar = createHaarFeatures(width, height, scanStep, sizeStep);
     
-    std::cout << "haarFeature: " << haarFeatures.size() << std::endl;
-    saveHaarFeatures(argv[3], haarFeatures);
+    std::cout << "haarFeature: " << haar.size() << std::endl;
+    saveHaarFeatures(argv[3], haar);
     
     double **src = new double*[height];
     double **dst = new double*[height];
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	dst[i] = new double[width];
     }
     
-    size_t classifierNum = haarFeatures.size();
+    size_t classifierNum = haar.size();
     
     double **sample = new double*[classifierNum];
     for (size_t i = 0; i < classifierNum; ++i) {
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	
 	for (size_t j = 0; j < classifierNum; ++j)
 	{
-	    sample[j][i] = haarFeatures[j]->extract(dst);
+	    sample[j][i] = haar[j].extract(dst);
 	}
 	
 	if (i % 100 == 0)
@@ -115,10 +115,6 @@ int main(int argc, char *argv[])
     }
     delete[] src;
     delete[] dst;
-    
-    for (size_t i = 0; i < haarFeatures.size(); ++i) {
-	delete haarFeatures[i];
-    }
     
     return 0;
 }

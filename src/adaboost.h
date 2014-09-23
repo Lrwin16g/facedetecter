@@ -15,12 +15,12 @@ public:
 private:
     int classifierNum_;
     int sampleNum_;
-    const int categoryNum = 2;
-    const int category[2] = {1, -1};
+    const int categoryNum_ = 2;
+    const int category_[2] = {1, -1};
     
-    std::vector<Haar*> classifier;
-    double *weight;
-    double *alpha;
+    std::vector<Haar*> classifier_;
+    double *weight_;
+    double *alpha_;
 };
 
 #endif
