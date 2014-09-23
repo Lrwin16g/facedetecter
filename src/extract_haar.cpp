@@ -84,24 +84,16 @@ int main(int argc, char *argv[])
 	}
     }
     
-    std::ofstream fout(argv[4]);
-    for (size_t i = 0; i < classifierNum; ++i)
-    {
-	for (size_t j = 0; j < sampleNum; ++j)
-	{
-	    fout << sample[i][j] << " ";
-	}
-	fout << std::endl;
-	if (i % 100 == 0)
-	{
-	    std::cout << "saving: " << i << "/" << classifierNum << std::endl;
-	}
-    }
-    for (size_t i = 0; i < sampleNum; ++i)
-    {
-	fout << label[i] << " ";
-    }
-    fout.close();
+    file::savefile(argv[4], sample, classifierNum, sampleNum, true);
+    
+    std::cout << "sample: " << sampleNum << std::endl;
+    std::cout << "classifier: " << classifierNum << std::endl;
+    
+    std::string name = argv[4];
+    std::string ext = ".label";
+    name.replace(name.rfind(".dat"), ext.length(), ext);
+    
+    file::savefile(name.c_str(), label, sampleNum, false);
     
     for (size_t i = 0; i < classifierNum; ++i) {
 	delete[] sample[i];

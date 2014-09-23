@@ -27,10 +27,10 @@ namespace file
 	    while (true)
 	    {
 		ifs.read(reinterpret_cast<char*>(&elem), sizeof(T));
-		data.push_back(elem);
 		if (ifs.eof()) {
 		    break;
 		}
+		data.push_back(elem);
 	    }
 	} else {
 	    ifs.open(filename);
@@ -49,7 +49,7 @@ namespace file
     };
     
     template<typename T>
-    std::vector<std::vector<T> > loadfile(const char *filename, const char *delim, bool verbose = false)
+    std::vector<std::vector<T> > loadfile(const char *filename, const char *delim, bool verbose)
     {
 	std::ifstream ifs(filename);
 	std::vector<std::vector<T> > data;
@@ -78,7 +78,7 @@ namespace file
     };
     
     template<typename T>
-    std::vector<std::vector<T> > loadfile(const char *filename, int col, bool verbose = false)
+    std::vector<std::vector<T> > loadfile(const char *filename, int col, bool verbose)
     {
 	std::ifstream ifs(filename, std::ios::binary);
 	std::vector<std::vector<T> > data;
@@ -91,10 +91,10 @@ namespace file
 		ifs.read(reinterpret_cast<char*>(&elem), sizeof(T));
 		line[i] = elem;
 	    }
-	    data.push_back(line);
 	    if (ifs.eof()) {
 		break;
 	    }
+	    data.push_back(line);
 	    
 	    if (verbose) {
 		if (data.size() % 100 == 0) {
@@ -108,7 +108,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, const std::vector<T> &data, bool isBin)
+    void savefile(const char *filename, std::vector<T> &data, bool isBin)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -129,7 +129,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, const std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ")
+    void savefile(const char *filename, std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ")
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -157,7 +157,28 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, const T **data, int row, int col, bool isBin, const char *delim = " ")
+    void savefile(const char *filename, T *data, int row, bool isBin)
+    {
+	std::ofstream ofs;
+	if (isBin)
+	{
+	    ofs.open(filename, std::ios::binary);
+	    for (int i = 0; i < row; ++i)
+	    {
+		ofs.write(reinterpret_cast<char*>(&data[i]), sizeof(T));
+	    }
+	} else {
+	    ofs.open(filename);
+	    for (int i = 0; i < row; ++i)
+	    {
+		ofs << data[i] << std::endl;
+	    }
+	}
+	ofs.close();
+    };
+    
+    template<typename T>
+    void savefile(const char *filename, T **data, int row, int col, bool isBin, const char *delim = " ")
     {
 	std::ofstream ofs;
 	if (isBin)
