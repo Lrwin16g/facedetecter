@@ -1,9 +1,12 @@
 #include "adaboost.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <limits>
 #include <cmath>
 
 #include "haar.h"
+#include "filelib.h"
 
 const int categoryNum_ = 2;
 
@@ -80,7 +83,7 @@ void AdaBoost::train(const double * const *sample, const int *label, const std::
 	    }
 	    
 	    if (j % 100 == 0) {
-		std::cout << j << "/" << candidate.size() << std::endl;
+		std::cout << "training: " << j << "/" << candidate.size() << std::endl;
 	    }
 	}
 	
@@ -96,6 +99,13 @@ void AdaBoost::train(const double * const *sample, const int *label, const std::
 	}
 	
 	std::cout << i << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
+	
+	std::stringstream ss;
+	ss << classifier_.size();
+	std::string filename_1 = "mit_cbcl_" + ss.str() + ".param";
+	std::string filename_2 = "mit_cbcl_" + ss.str() + ".alpha";
+	saveHaarFeatures(filename_1.c_str(), classifier_);
+	file::savefile(filename_2.c_str(), alpha_, classifier_.size(), false);
     }
 }
 

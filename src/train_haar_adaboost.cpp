@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	label[i] = labelvec[i];
     }
     
-    AdaBoost boost(classifierNum, sampleNum);
+    AdaBoost boost(110, sampleNum);
     boost.initializeWeight(label);
     
     boost.train(sample, label, haar);

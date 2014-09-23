@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	}
     }
     
-    file::savefile(argv[4], sample, classifierNum, sampleNum, true);
+    file::savefile(argv[4], sample, classifierNum, sampleNum, true, NULL, true);
     
     std::cout << "sample: " << sampleNum << std::endl;
     std::cout << "classifier: " << classifierNum << std::endl;

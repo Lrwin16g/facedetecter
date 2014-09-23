@@ -7,7 +7,7 @@
 
 #include "filelib.h"
 
-const int TypeNum = 5;
+const int TypeNum = 6;
 
 Haar::Haar(int type, int x, int y, int width, int height, double parity, double threshold)
     : type_(type), x_(x), y_(y), width_(width), height_(height),
@@ -53,20 +53,26 @@ double Haar::extract(double const * const * image)
     case 2:	// HaarHLine
 	white_1 = calcLuminance(image, x_, y_, width_ * 3, height_);
 	black_1 = calcLuminance(image, x_ + width_, y_, width_, height_);
-	value = (white_1 - 2.0 * black_1) / static_cast<double>(width_ * height_);
+	value = (white_1 - 3.0 * black_1) / static_cast<double>(2 * width_ * height_);
 	break;
     
     case 3:	// HaarVLine
 	white_1 = calcLuminance(image, x_, y_, width_, height_ * 3);
 	black_1 = calcLuminance(image, x_, y_ + height_, width_, height_);
-	value = (white_1 - 2.0 * black_1) / static_cast<double>(width_ * height_);
+	value = (white_1 - 3.0 * black_1) / static_cast<double>(2 * width_ * height_);
 	break;
     
     case 4:	// HaarChecker
 	white_1 = calcLuminance(image, x_, y_, width_ * 2, height_ * 2);
 	black_1 = calcLuminance(image, x_ + width_, y_, width_, height_);
 	black_2 = calcLuminance(image, x_, y_ + height_, width_, height_);
-	value = (white_1 - 2.0 * (black_1 + black_2)) / static_cast<double>(width_ * height_);
+	value = (white_1 - 2.0 * (black_1 + black_2)) / static_cast<double>(2 * width_ * height_);
+	break;
+    
+    case 5:	// HaarCenterSurround
+	white_1 = calcLuminance(image, x_, y_, width_ * 3, height_ * 3);
+	black_1 = calcLuminance(image, x_ + width_, y_ + height_, width_, height_);
+	value = (white_1 - 9.0 * black_1) / static_cast<double>(8 * width_ * height_);
 	break;
     }
     
@@ -121,6 +127,14 @@ bool Haar::isValidRange(int type, int x, int y, int width, int height, int rectW
     
     case 4:	// HaarChecker
 	if ((x + width * 2 < rectWidth) && (y + height * 2 < rectHeight)) {
+	    return true;
+	} else {
+	    return false;
+	}
+	break;
+    
+    case 5:	// HaarCenterSurround
+	if ((x + width * 3 < rectWidth) && (y + height * 3 < rectHeight)) {
 	    return true;
 	} else {
 	    return false;

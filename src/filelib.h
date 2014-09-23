@@ -69,7 +69,7 @@ namespace file
 	    
 	    if (verbose) {
 		if (data.size() % 100 == 0) {
-		    std::cout << data.size() << std::endl;
+		    std::cout << "loading: " << filename << " " << data.size() << "/***" << std::endl;
 		}
 	    }
 	}
@@ -98,7 +98,7 @@ namespace file
 	    
 	    if (verbose) {
 		if (data.size() % 100 == 0) {
-		    std::cout << data.size() << std::endl;
+		    std::cout << "loading: " << filename << " " << data.size() << "/***" << std::endl;
 		}
 	    }
 	}
@@ -129,7 +129,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ")
+    void savefile(const char *filename, std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ", bool verbose = false)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -141,6 +141,12 @@ namespace file
 		{
 		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
 		}
+		
+		if (verbose) {
+		    if (i % 100 == 0) {
+			std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
+		    }
+		}
 	    }
 	} else {
 	    ofs.open(filename);
@@ -151,6 +157,12 @@ namespace file
 		    ofs << data[i][j] << delim;
 		}
 		ofs << data[i][data[i].size() - 1] << std::endl;
+		
+		if (verbose) {
+		    if (i % 100 == 0) {
+			std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
+		    }
+		}
 	    }
 	}
 	ofs.close();
@@ -178,7 +190,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, T **data, int row, int col, bool isBin, const char *delim = " ")
+    void savefile(const char *filename, T **data, int row, int col, bool isBin, const char *delim = " ", bool verbose = false)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -190,6 +202,12 @@ namespace file
 		{
 		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
 		}
+		
+		if (verbose) {
+		    if (i % 100 == 0) {
+			std::cout << "saving: " << filename << " " << i << "/" << row << std::endl;
+		    }
+		}
 	    }
 	} else {
 	    ofs.open(filename);
@@ -200,6 +218,12 @@ namespace file
 		    ofs << data[i][j] << delim;
 		}
 		ofs << data[i][col - 1] << std::endl;
+		
+		if (verbose) {
+		    if (i % 100 == 0) {
+			std::cout << "saving: " << filename << " " << i << "/" << row << std::endl;
+		    }
+		}
 	    }
 	}
 	ofs.close();
