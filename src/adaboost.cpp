@@ -1,5 +1,6 @@
 #include "adaboost.h"
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <limits>
@@ -12,13 +13,11 @@ const int categoryNum_ = 2;
 
 AdaBoost::AdaBoost(int classifierNum, int sampleNum)
     : classifierNum_(classifierNum), sampleNum_(sampleNum),
-      weight_(NULL), alpha_(NULL), data_(NULL), index_(NULL)
+      weight_(NULL), alpha_(NULL)
 {
     category_[0] = 1;	category_[1] = -1;
     alpha_ = new double[classifierNum_];
     weight_ = new double[sampleNum_];
-    data_ = new double[sampleNum_];
-    index_ = new int[sampleNum_];
 }
 
 AdaBoost::~AdaBoost()
@@ -29,38 +28,23 @@ AdaBoost::~AdaBoost()
     if (weight_ != NULL) {
 	delete[] weight_;
     }
-    if (data_ != NULL) {
-	delete[] data_;
-    }
-    if (index_ != NULL) {
-	delete[] index_;
-    }
-}
-
-void AdaBoost::initializeWeight(const int *label)
-{
-    int sampleNumPerCategory[categoryNum_] = {0, 0};
-    for (int i = 0; i < sampleNum_; ++i)
-    {
-	if (label[i] == category_[0]) {
-	    sampleNumPerCategory[0]++;
-	} else {
-	    sampleNumPerCategory[1]++;
-	}
-    }
-    
-    for (int i = 0; i < sampleNum_; ++i)
-    {
-	if (label[i] == 1) {
-	    weight_[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[0]);
-	} else {
-	    weight_[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[1]);
-	}
-    }
 }
 
 void AdaBoost::train(const double * const *sample, const int *label, const std::vector<Haar> &candidate)
 {
+    initializeWeight(label);
+    
+    std::vector<std::vector<Sample> > sortedSample(candidate.size());
+    for (size_t i = 0; i < candidate.size(); ++i)
+    {
+	sortedSample[i].resize(sampleNum_);
+	for (int j = 0; j < sampleNum_; ++j)
+	{
+	    sortedSample[i][j] = Sample(sample[i][j], label[j], j);
+	}
+	std::sort(sortedSample[i].begin(), sortedSample[i].end());
+    }
+    
     for (int i = 0; i < classifierNum_; ++i)
     {
 	normalizeWeight();
@@ -73,7 +57,7 @@ void AdaBoost::train(const double * const *sample, const int *label, const std::
 	{
 	    double p = 1.0;
 	    double theta = 0.0;
-	    double error = evaluateParameter(sample[j], label, p, theta);
+	    double error = evaluateParameter(sample[j], label, sortedSample[j], p, theta);
 	    if (error < epsilon)
 	    {
 		epsilon = error;
@@ -101,11 +85,33 @@ void AdaBoost::train(const double * const *sample, const int *label, const std::
 	std::cout << i << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
 	
 	std::stringstream ss;
-	ss << classifier_.size();
+	ss << std::setw(3) << std::setfill('0') << classifier_.size();
 	std::string filename_1 = "mit_cbcl_" + ss.str() + ".param";
 	std::string filename_2 = "mit_cbcl_" + ss.str() + ".alpha";
 	saveHaarFeatures(filename_1.c_str(), classifier_);
 	file::savefile(filename_2.c_str(), alpha_, classifier_.size(), false);
+    }
+}
+
+void AdaBoost::initializeWeight(const int *label)
+{
+    int sampleNumPerCategory[categoryNum_] = {0, 0};
+    for (int i = 0; i < sampleNum_; ++i)
+    {
+	if (label[i] == category_[0]) {
+	    sampleNumPerCategory[0]++;
+	} else {
+	    sampleNumPerCategory[1]++;
+	}
+    }
+    
+    for (int i = 0; i < sampleNum_; ++i)
+    {
+	if (label[i] == 1) {
+	    weight_[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[0]);
+	} else {
+	    weight_[i] = 1.0 / static_cast<double>(2 * sampleNumPerCategory[1]);
+	}
     }
 }
 
@@ -120,25 +126,6 @@ void AdaBoost::normalizeWeight()
     }
 }
 
-void sort_twin(double *array_1, int *array_2, int len)
-{
-    for (int i = 0; i < len - 1; ++i)
-    {
-	for (int j = len - 1; j > i; --j)
-	{
-	    if (array_1[j - 1] > array_1[j])
-	    {
-		double tmp_1 = array_1[j];
-		array_1[j] = array_1[j - 1];
-		array_1[j - 1] = tmp_1;
-		int tmp_2 = array_2[j];
-		array_2[j] = array_2[j - 1];
-		array_2[j - 1] = tmp_2;
-	    }
-	}
-    }
-}
-
 int AdaBoost::classify(double sample, double parity, double threshold)
 {
     if (sample * parity > parity * threshold) {
@@ -148,27 +135,22 @@ int AdaBoost::classify(double sample, double parity, double threshold)
     }
 }
 
-double AdaBoost::evaluateParameter(const double *sample, const int *label, double &parity, double &threshold)
+double AdaBoost::evaluateParameter(const double *sample, const int *label,
+				   const std::vector<Sample> &sortedSample,
+				   double &parity, double &threshold)
 {
-    for (int i = 0; i < sampleNum_; ++i) {
-	data_[i] = sample[i];
-	index_[i] = i;
-    }
-    
-    sort_twin(data_, index_, sampleNum_);
-    
     double epsilon = std::numeric_limits<double>::max();
     for (int i = 0; i < sampleNum_ - 1; ++i)
     {
-	if (label[index_[i]] == label[index_[i + 1]]) {
+	if (sortedSample[i].category == sortedSample[i + 1].category) {
 	    continue;
 	}
-	if (data_[i] == data_[i + 1]) {
+	if (sortedSample[i].value == sortedSample[i + 1].value) {
 	    continue;
 	}
 	
 	double p = 1.0;
-	double theta = (data_[i] + data_[i + 1]) / 2.0;
+	double theta = (sortedSample[i].value + sortedSample[i + 1].value) / 2.0;
 	
 	double error = 0.0;
 	for (int j = 0; j < sampleNum_; ++j)

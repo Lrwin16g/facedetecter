@@ -54,8 +54,6 @@ int main(int argc, char *argv[])
     }
     
     AdaBoost boost(110, sampleNum);
-    boost.initializeWeight(label);
-    
     boost.train(sample, label, haar);
     
     for (int i = 0; i < classifierNum; ++i) {

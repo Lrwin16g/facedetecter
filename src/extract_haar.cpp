@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     int width = imageList[0].cols;
     int height = imageList[0].rows;
     
-    int scanStep = 3;
-    int sizeStep = 3;
+    int scanStep = 2;
+    int sizeStep = 1;
     
     std::vector<Haar> haar = createHaarFeatures(width, height, scanStep, sizeStep);
     
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	}
     }
     
-    file::savefile(argv[4], sample, classifierNum, sampleNum, true, NULL, true);
+    file::savefile(argv[4], sample, classifierNum, sampleNum, true, " ", true);
     
     std::cout << "sample: " << sampleNum << std::endl;
     std::cout << "classifier: " << classifierNum << std::endl;

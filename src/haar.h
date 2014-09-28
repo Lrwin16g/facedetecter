@@ -7,6 +7,7 @@
 class Haar
 {
 public:
+    Haar();
     Haar(int type, int x, int y, int width, int height, double parity, double threshold);
     Haar(const Haar &obj);
     ~Haar();
