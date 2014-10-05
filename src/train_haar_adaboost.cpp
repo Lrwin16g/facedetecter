@@ -20,9 +20,8 @@ int main(int argc, char *argv[])
     }
     
     std::vector<Haar> haar = loadHaarFeatures(argv[1]);
-#ifdef _DEBUG
+    
     std::cout << "haarNum: " << haar.size() << std::endl;
-#endif
     
     std::string datname = argv[2];
     std::string labelname = datname;
@@ -35,10 +34,8 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double> > data = file::loadfile<double>(datname.c_str(), sampleNum, true);
     size_t classifierNum = data.size();
     
-#ifdef _DEBUG
     std::cout << "classifierNum: " << classifierNum << std::endl;
     std::cout << "sampleNum: " << sampleNum << std::endl;
-#endif
     
     double **sample = new double*[classifierNum];
     for (int i = 0; i < classifierNum; ++i) {
@@ -53,8 +50,8 @@ int main(int argc, char *argv[])
 	label[i] = labelvec[i];
     }
     
-    AdaBoost boost(110, sampleNum);
-    boost.train(sample, label, haar);
+    AdaBoost model(300, sampleNum);
+    model.train(sample, label, haar);
     
     for (int i = 0; i < classifierNum; ++i) {
 	delete[] sample[i];

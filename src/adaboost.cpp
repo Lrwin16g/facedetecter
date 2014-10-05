@@ -82,7 +82,7 @@ void AdaBoost::train(const double * const *sample, const int *label, const std::
 	    weight_[j] *= exp(-alpha_[i] * static_cast<double>(label[j] * classify(sample[idx][j], parity, threshold)));
 	}
 	
-	std::cout << i << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
+	std::cout << i + 1 << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
 	
 	std::stringstream ss;
 	ss << std::setw(3) << std::setfill('0') << classifier_.size();

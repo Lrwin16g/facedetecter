@@ -108,7 +108,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, std::vector<T> &data, bool isBin)
+    void savefile(const char *filename, const std::vector<T> &data, bool isBin)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -116,7 +116,8 @@ namespace file
 	    ofs.open(filename, std::ios::binary);
 	    for (size_t i = 0; i < data.size(); ++i)
 	    {
-		ofs.write(reinterpret_cast<char*>(&data[i]), sizeof(T));
+		T elem = data[i];
+		ofs.write(reinterpret_cast<char*>(&elem), sizeof(T));
 	    }
 	} else {
 	    ofs.open(filename);
@@ -129,7 +130,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ", bool verbose = false)
+    void savefile(const char *filename, const std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ", bool verbose = false)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -139,7 +140,8 @@ namespace file
 	    {
 		for (size_t j = 0; j < data[i].size(); ++j)
 		{
-		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
+		    T elem = data[i][j];
+		    ofs.write(reinterpret_cast<char*>(&elem), sizeof(T));
 		}
 		
 		if (verbose) {
@@ -169,7 +171,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, T *data, int row, bool isBin)
+    void savefile(const char *filename, const T *data, int row, bool isBin)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -177,7 +179,8 @@ namespace file
 	    ofs.open(filename, std::ios::binary);
 	    for (int i = 0; i < row; ++i)
 	    {
-		ofs.write(reinterpret_cast<char*>(&data[i]), sizeof(T));
+		T elem = data[i];
+		ofs.write(reinterpret_cast<char*>(&elem), sizeof(T));
 	    }
 	} else {
 	    ofs.open(filename);
@@ -190,7 +193,7 @@ namespace file
     };
     
     template<typename T>
-    void savefile(const char *filename, T **data, int row, int col, bool isBin, const char *delim = " ", bool verbose = false)
+    void savefile(const char *filename, T const * const * data, int row, int col, bool isBin, const char *delim = " ", bool verbose = false)
     {
 	std::ofstream ofs;
 	if (isBin)
@@ -200,7 +203,8 @@ namespace file
 	    {
 		for (int j = 0; j < col; ++j)
 		{
-		    ofs.write(reinterpret_cast<char*>(&data[i][j]), sizeof(T));
+		    T elem = data[i][j];
+		    ofs.write(reinterpret_cast<char*>(&elem), sizeof(T));
 		}
 		
 		if (verbose) {
