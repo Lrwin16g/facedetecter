@@ -19,45 +19,23 @@ int main(int argc, char *argv[])
 	return -1;
     }
     
-    std::vector<Haar> haar = loadHaarFeatures(argv[1]);
-    
-    std::cout << "haarNum: " << haar.size() << std::endl;
+    // Haar-like特徴量の読込み
+    std::vector<Haar> candidateSet = loadHaarFeatures(argv[1]);
+    std::cout << "haarNum: " << candidateSet.size() << std::endl;
     
     std::string datname = argv[2];
-    std::string labelname = datname;
-    std::string ext = ".label";
-    labelname.replace(labelname.rfind(".dat"), ext.length(), ext);
+    std::string labelname = file::splitext(datname)[0] + ".label";
     
-    std::vector<int> labelvec = file::loadfile<int>(labelname.c_str(), false);
-    size_t sampleNum = labelvec.size();
+    // ラベルの読込み
+    std::vector<int> labelSet = file::loadfile<int>(labelname.c_str(), false);
     
-    std::vector<std::vector<double> > data = file::loadfile<double>(datname.c_str(), sampleNum, true);
-    size_t classifierNum = data.size();
+    // 特徴量抽出結果の読込み
+    std::vector<std::vector<double> > sampleSet = file::loadfile<double>(datname.c_str(), labelSet.size(), true);
+    std::cout << "classifierNum: " << sampleSet.size() << std::endl;
+    std::cout << "sampleNum: " << labelSet.size() << std::endl;
     
-    std::cout << "classifierNum: " << classifierNum << std::endl;
-    std::cout << "sampleNum: " << sampleNum << std::endl;
-    
-    double **sample = new double*[classifierNum];
-    for (int i = 0; i < classifierNum; ++i) {
-	sample[i] = new double[sampleNum];
-	for (int j = 0; j < sampleNum; ++j) {
-	    sample[i][j] = data[i][j];
-	}
-    }
-    
-    int *label = new int[sampleNum];
-    for (int i = 0; i < sampleNum; ++i) {
-	label[i] = labelvec[i];
-    }
-    
-    AdaBoost model(300, sampleNum);
-    model.train(sample, label, haar);
-    
-    for (int i = 0; i < classifierNum; ++i) {
-	delete[] sample[i];
-    }
-    delete[] sample;
-    delete[] label;
+    AdaBoost model;
+    model.train(300, sampleSet, labelSet, candidateSet);
     
     return 0;
 }

@@ -7,17 +7,17 @@
 
 #include "filelib.h"
 
-const int TypeNum = 6;
+const int TypeNum = 3;
 
 Haar::Haar()
     : type_(0), x_(0), y_(0), width_(0), height_(0),
-      parity_(0.0), threshold_(0.0)
+      parity_(0.0), threshold_(0.0), index_(0)
 {
 }
 
 Haar::Haar(int type, int x, int y, int width, int height, double parity, double threshold)
     : type_(type), x_(x), y_(y), width_(width), height_(height),
-      parity_(parity), threshold_(threshold)
+      parity_(parity), threshold_(threshold), index_(0)
 {
 }
 
@@ -30,6 +30,7 @@ Haar::Haar(const Haar &obj)
     height_ = obj.height();
     parity_ = obj.parity();
     threshold_ = obj.threshold();
+    index_ = obj.index();
 }
 
 Haar::~Haar()

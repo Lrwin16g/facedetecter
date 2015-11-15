@@ -25,15 +25,18 @@ public:
     inline int    height()    const { return height_; }
     inline double parity()    const { return parity_; }
     inline double threshold() const { return threshold_; }
+    inline int    index()     const { return index_; }
     
     inline void setParity(double parity)	{ parity_ = parity; }
     inline void setThreshold(double threshold)	{ threshold_ = threshold; }
+    inline void setIndex(int index)		{ index_ = index; }
     
 private:
     int type_;
     int x_, y_;
     int width_, height_;
     double parity_, threshold_;
+    int index_;
 };
 
 // ROIのサイズからHaar-like特徴量の配列を作成

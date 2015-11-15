@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <opencv2/opencv.hpp>
@@ -7,47 +6,39 @@
 #include "haar.h"
 #include "filelib.h"
 
+// 顔:1、非顔:-1
 const int categoryNum = 2;
 const int category[2] = {1, -1};
 
 int main(int argc, char *argv[])
 {
-    if (argc != 5)
+    if (argc != 4)
     {
-	std::cerr << "Usage: " << argv[0] << " <face-list> <nonface-list> <haar-param> <haar-dat>" << std::endl;
+	std::cerr << "Usage: " << argv[0] << " <[in]file-list> <[in]haar-param> <[out]dat-file>" << std::endl;
 	return -1;
     }
     
-    std::vector<std::vector<std::string> > fileList(categoryNum);
-    for (int i = 0; i < categoryNum; ++i)
-    {
-	fileList[i] = file::loadfile(argv[i + 1]);
-    }
+    // 入力画像リストの読込み
+    std::vector<std::string> fileList = file::loadfile(argv[1]);
+    size_t sampleNum = fileList.size();
     
-    size_t sampleNum = fileList[0].size() + fileList[1].size();
-    
+    // 画像の読込み、配列の作成
     std::vector<cv::Mat> imageList;
-    int *label = new int[sampleNum];
-    for (int i = 0; i < categoryNum; ++i)
+    for (size_t i = 0; i < sampleNum; ++i)
     {
-	for (size_t j = 0; j < fileList[i].size(); ++j)
-	{
-	    imageList.push_back(cv::imread(fileList[i][j], 0));
-	    label[i * fileList[0].size() + j] = category[i];
-	}
+	imageList.push_back(cv::imread(fileList[i], 0));
     }
     
     int width = imageList[0].cols;
     int height = imageList[0].rows;
+    std::cout << "width: " << width << " height: " << height << std::endl;
     
-    int scanStep = 2;
-    int sizeStep = 1;
+    // Haar-like特徴量の読込み
+    std::vector<Haar> haar = loadHaarFeatures(argv[2]);
+    size_t classifierNum = haar.size();
+    std::cout << "HaarNum: " << classifierNum << std::endl;
     
-    std::vector<Haar> haar = createHaarFeatures(width, height, scanStep, sizeStep);
-    
-    std::cout << "haarFeature: " << haar.size() << std::endl;
-    saveHaarFeatures(argv[3], haar);
-    
+    // 特徴量抽出の開始
     double **src = new double*[height];
     double **dst = new double*[height];
     for (int i = 0; i < height; ++i) {
@@ -55,13 +46,12 @@ int main(int argc, char *argv[])
 	dst[i] = new double[width];
     }
     
-    size_t classifierNum = haar.size();
-    
-    double **sample = new double*[classifierNum];
+    std::vector<std::vector<double> > sample(classifierNum);
     for (size_t i = 0; i < classifierNum; ++i) {
-	sample[i] = new double[sampleNum];
+	sample[i].resize(sampleNum);
     }
     
+    // Haar-like特徴量の抽出
     for (size_t i = 0; i < sampleNum; ++i)
     {
 	for (int y = 0; y < height; ++y)
@@ -71,6 +61,7 @@ int main(int argc, char *argv[])
 		src[y][x] = static_cast<double>(imageList[i].at<uchar>(y, x));
 	    }
 	}
+	// 積分画像の作成
 	createIntegralImage(src, dst, width, height);
 	
 	for (size_t j = 0; j < classifierNum; ++j)
@@ -84,29 +75,18 @@ int main(int argc, char *argv[])
 	}
     }
     
-    file::savefile(argv[4], sample, classifierNum, sampleNum, true, " ", true);
+    // 特徴量抽出結果の保存
+    file::savemat(argv[3], sample, true);
     
     std::cout << "sample: " << sampleNum << std::endl;
     std::cout << "classifier: " << classifierNum << std::endl;
-    
-    std::string name = argv[4];
-    std::string ext = ".label";
-    name.replace(name.rfind(".dat"), ext.length(), ext);
-    
-    file::savefile(name.c_str(), label, sampleNum, false);
-    
-    for (size_t i = 0; i < classifierNum; ++i) {
-	delete[] sample[i];
-    }
-    delete[] sample;
-    delete[] label;
     
     for (int i = 0; i < height; ++i) {
 	delete[] src[i];
 	delete[] dst[i];
     }
-    delete[] src;
-    delete[] dst;
+    delete[] src; src = NULL;
+    delete[] dst; dst = NULL;
     
     return 0;
 }

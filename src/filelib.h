@@ -10,6 +10,8 @@
 namespace file
 {
     std::vector<std::string> split(const std::string &str, const char *delim);
+    
+    std::vector<std::string> splitext(const std::string &str);
 
     std::vector<std::string> loadfile(const char *filename);
 
@@ -108,6 +110,38 @@ namespace file
     };
     
     template<typename T>
+    std::vector<std::vector<T> > loadmat(const char *filename, bool verbose = false)
+    {
+	std::ifstream ifs(filename, std::ios::binary);
+	
+	size_t row, col;
+	ifs.read(reinterpret_cast<char*>(&row), sizeof(size_t));
+	ifs.read(reinterpret_cast<char*>(&col), sizeof(size_t));
+	
+	std::vector<std::vector<T> > data(row);
+	
+	for (size_t i = 0; i < row; ++i)
+	{
+	    data[i].resize(col);
+	    for (size_t j = 0; j < col; ++j)
+	    {
+		T elem;
+		ifs.read(reinterpret_cast<char*>(&elem), sizeof(T));
+		data[i][j] = elem;
+	    }
+	    
+	    if (verbose) {
+		if (i % 100 == 0) {
+		    std::cout << "loading: " << filename << " " << i << "/" << row << std::endl;
+		}
+	    }
+	}
+	ifs.close();
+	
+	return data;
+    }
+    
+    template<typename T>
     void savefile(const char *filename, const std::vector<T> &data, bool isBin)
     {
 	std::ofstream ofs;
@@ -164,6 +198,33 @@ namespace file
 		    if (i % 100 == 0) {
 			std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
 		    }
+		}
+	    }
+	}
+	ofs.close();
+    };
+    
+    template<typename T>
+    void savemat(const char *filename, const std::vector<std::vector<T> > &data, bool verbose = false)
+    {
+	std::ofstream ofs(filename, std::ios::binary);
+	
+	size_t row = data.size();
+	size_t col = data[0].size();
+	ofs.write(reinterpret_cast<char*>(&row), sizeof(size_t));
+	ofs.write(reinterpret_cast<char*>(&col), sizeof(size_t));
+	
+	for (size_t i = 0; i < row; ++i)
+	{
+	    for (size_t j = 0; j < col; ++j)
+	    {
+		T elem = data[i][j];
+		ofs.write(reinterpret_cast<char*>(&elem), sizeof(T));
+	    }
+	    
+	    if (verbose) {
+		if (i % 100 == 0) {
+		    std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
 		}
 	    }
 	}

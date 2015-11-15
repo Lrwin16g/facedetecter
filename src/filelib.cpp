@@ -22,6 +22,17 @@ std::vector<std::string> file::split(const std::string &str, const char *delim)
     return result;
 }
 
+std::vector<std::string> file::splitext(const std::string &str)
+{
+    std::string::size_type index = str.rfind(".");
+    
+    std::vector<std::string> result;
+    result.push_back(str.substr(0, index));
+    result.push_back(str.substr(index, str.length()));
+    
+    return result;
+}
+
 std::vector<std::string> file::loadfile(const char *filename)
 {
     std::vector<std::string> data;
