@@ -4,52 +4,29 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
+#include "adaboost.h"
 #include "haar.h"
 #include "filelib.h"
 
-const int categoryNum = 2;
-const int category[2] = {1, -1};
-
-int classify(const std::vector<Haar*> &haarFeatures, double **image)
-{
-    double value = 0.0;
-    for (int i = 0; i < haarFeatures.size(); ++i)
-    {
-	if (haarFeatures[i]->classify(image))
-	{
-	    value += haarFeatures[i]->weight();
-	}
-	else
-	{
-	    value -= haarFeatures[i]->weight();
-	}
-    }
-    
-    if (value >= 0.0) {
-	return category[0];
-    } else {
-	return category[1];
-    }
-}
+const int Category[2] = {1, -1};
 
 int main(int argc, char *argv[])
 {
     if (argc != 4) {
-	std::cerr << "Usage: " << argv[0] << " <param> <facelist> <nonfacelist>" << std::endl;
+	std::cerr << "Usage: " << argv[0] << " <in:haar-param> <in:test-face-list> <in:test-non-face-list>" << std::endl;
 	return -1;
     }
     
-    std::vector<Haar*> haarFeatures = loadHaarFeatures(argv[1]);
-    
-    int classifierNum = haarFeatures.size();
+    AdaBoost model;
+    model.loadfile(argv[1]);
     
     std::vector<std::vector<std::string> > fileList;
     fileList.push_back(file::loadfile(argv[2]));
     fileList.push_back(file::loadfile(argv[3]));
     
     int sampleNum = fileList[0].size() + fileList[1].size();
-    int faceList = fileList[0].size();
-    int nonfaceList = fileList[1].size();
+    int positiveSampleList = fileList[0].size();
+    int negativeSampleList = fileList[1].size();
     
     std::vector<cv::Mat> image(sampleNum);
     int *label = new int[sampleNum];
@@ -57,7 +34,7 @@ int main(int argc, char *argv[])
 	for (int j = 0; j < fileList[i].size(); ++j)
 	{
 	    image[i * fileList[0].size() + j] = cv::imread(fileList[i][j], 0);
-	    label[i * fileList[0].size() + j] = category[i];
+	    label[i * fileList[0].size() + j] = Category[i];
 	}
     }
     
@@ -65,10 +42,12 @@ int main(int argc, char *argv[])
     int height = image[0].rows;
     
     double **src = new double*[height];
-    double **dst = new double*[height];
     for (int i = 0; i < height; ++i) {
 	src[i] = new double[width];
-	dst[i] = new double[width];
+    }
+    double **dst = new double*[height + 1];
+    for (int i = 0; i < height + 1; ++i) {
+	dst[i] = new double[width + 1];
     }
     
     int count = 0;
@@ -80,7 +59,7 @@ int main(int argc, char *argv[])
 	}
 	createIntegralImage(src, dst, width, height);
 	
-	if (label[i] == classify(haarFeatures, dst))
+	if (label[i] == model.classify(dst))
 	{
 	    count++;
 	}
@@ -88,20 +67,18 @@ int main(int argc, char *argv[])
     
     double accuracy = static_cast<double>(count) / static_cast<double>(sampleNum);
     
-    std::cout << accuracy << std::endl;
+    std::cout << "accuracy: " << accuracy * 100 << "%" << std::endl;
     
     for (int i = 0; i < height; ++i) {
 	delete[] src[i];
+    }
+    for (int i = 0; i < height + 1; ++i) {
 	delete[] dst[i];
     }
     delete[] src;
     delete[] dst;
     
     delete[] label;
-    
-    for (int i = 0; i < classifierNum; ++i) {
-	delete haarFeatures[i];
-    }
     
     return 0;
 }

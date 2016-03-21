@@ -9,13 +9,65 @@
 
 namespace file
 {
-    std::vector<std::string> split(const std::string &str, const char *delim);
+    inline std::vector<std::string> split(const std::string &str, const char *delim)
+    {
+	std::string::size_type i = 0;
+	std::string::size_type j = str.find(delim);
     
-    std::vector<std::string> splitext(const std::string &str);
+	std::vector<std::string> result;
+    
+	while (j != std::string::npos)
+	{
+	    result.push_back(str.substr(i, j - i));
+	    i = ++j;
+	    j = str.find(delim, j);
+        
+	    if (j == std::string::npos)
+	    {
+	        result.push_back(str.substr(i, str.length()));
+	    }
+	}
+    
+	return result;
+    }
+    
+    inline std::vector<std::string> splitext(const std::string &str)
+    {
+	std::string::size_type index = str.rfind(".");
+    
+	std::vector<std::string> result;
+	result.push_back(str.substr(0, index));
+	result.push_back(str.substr(index, str.length()));
+    
+	return result;
+    }
 
-    std::vector<std::string> loadfile(const char *filename);
+    inline std::vector<std::string> loadfile(const char *filename)
+    {
+       std::vector<std::string> data;
+       std::ifstream ifs(filename);
+       std::string line;
+       while (std::getline(ifs, line))
+       {
+	    data.push_back(line);
+       }
+       return data;
+    }
 
-    std::vector<std::vector<std::string> > loadfile(const char *filename, const char *delim);
+    inline std::vector<std::vector<std::string> > loadfile(const char *filename, const char *delim)
+    {
+        std::ifstream ifs(filename);
+	std::vector<std::vector<std::string> > data;
+	std::string line;
+	while (std::getline(ifs, line))
+	{
+	    std::vector<std::string> tokens = split(line.substr(0, line.length()), delim);
+	    data.push_back(tokens);
+	}
+	ifs.close();
+    
+	return data;
+    }
     
     template<typename T>
     std::vector<T> loadfile(const char *filename, bool isBin)
@@ -48,7 +100,7 @@ namespace file
 	ifs.close();
 	
 	return data;
-    };
+    }
     
     template<typename T>
     std::vector<std::vector<T> > loadfile(const char *filename, const char *delim, bool verbose)
@@ -71,13 +123,16 @@ namespace file
 	    
 	    if (verbose) {
 		if (data.size() % 100 == 0) {
-		    std::cout << "loading: " << filename << " " << data.size() << "/***" << std::endl;
+		    std::cout << "loading: " << filename << " " << data.size() << "/***" << "\r" << std::flush;
 		}
 	    }
 	}
+	if (verbose) {
+	    std::cout << std::endl;
+	}
 	
 	return data;
-    };
+    }
     
     template<typename T>
     std::vector<std::vector<T> > loadfile(const char *filename, int col, bool verbose)
@@ -100,14 +155,17 @@ namespace file
 	    
 	    if (verbose) {
 		if (data.size() % 100 == 0) {
-		    std::cout << "loading: " << filename << " " << data.size() << "/***" << std::endl;
+		    std::cout << "loading: " << filename << " " << data.size() << "/***" << "\r" << std::flush;
 		}
 	    }
+	}
+	if (verbose) {
+	    std::cout << std::endl;
 	}
 	ifs.close();
 	
 	return data;
-    };
+    }
     
     template<typename T>
     std::vector<std::vector<T> > loadmat(const char *filename, bool verbose = false)
@@ -132,9 +190,12 @@ namespace file
 	    
 	    if (verbose) {
 		if (i % 100 == 0) {
-		    std::cout << "loading: " << filename << " " << i << "/" << row << std::endl;
+		    std::cout << "loading: " << filename << " " << i << "/" << row << "\r" << std::flush;
 		}
 	    }
+	}
+	if (verbose) {
+	    std::cout << std::endl;
 	}
 	ifs.close();
 	
@@ -161,7 +222,7 @@ namespace file
 	    }
 	}
 	ofs.close();
-    };
+    }
     
     template<typename T>
     void savefile(const char *filename, const std::vector<std::vector<T> > &data, bool isBin, const char *delim = " ", bool verbose = false)
@@ -180,7 +241,7 @@ namespace file
 		
 		if (verbose) {
 		    if (i % 100 == 0) {
-			std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
+			std::cout << "saving: " << filename << " " << i << "/" << data.size() << "\r" << std::flush;
 		    }
 		}
 	    }
@@ -196,13 +257,16 @@ namespace file
 		
 		if (verbose) {
 		    if (i % 100 == 0) {
-			std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
+			std::cout << "saving: " << filename << " " << i << "/" << data.size() << "\r" << std::flush;
 		    }
 		}
 	    }
 	}
+	if (verbose) {
+	    std::cout << std::endl;
+	}
 	ofs.close();
-    };
+    }
     
     template<typename T>
     void savemat(const char *filename, const std::vector<std::vector<T> > &data, bool verbose = false)
@@ -224,12 +288,15 @@ namespace file
 	    
 	    if (verbose) {
 		if (i % 100 == 0) {
-		    std::cout << "saving: " << filename << " " << i << "/" << data.size() << std::endl;
+		    std::cout << "saving: " << filename << " " << i << "/" << data.size() << "\r" << std::flush;
 		}
 	    }
 	}
+	if (verbose) {
+	    std::cout << std::endl;
+	}
 	ofs.close();
-    };
+    }
     
     template<typename T>
     void savefile(const char *filename, const T *data, int row, bool isBin)
@@ -251,7 +318,7 @@ namespace file
 	    }
 	}
 	ofs.close();
-    };
+    }
     
     template<typename T>
     void savefile(const char *filename, T const * const * data, int row, int col, bool isBin, const char *delim = " ", bool verbose = false)
@@ -270,7 +337,7 @@ namespace file
 		
 		if (verbose) {
 		    if (i % 100 == 0) {
-			std::cout << "saving: " << filename << " " << i << "/" << row << std::endl;
+			std::cout << "saving: " << filename << " " << i << "/" << row << "\r" << std::flush;
 		    }
 		}
 	    }
@@ -286,13 +353,16 @@ namespace file
 		
 		if (verbose) {
 		    if (i % 100 == 0) {
-			std::cout << "saving: " << filename << " " << i << "/" << row << std::endl;
+			std::cout << "saving: " << filename << " " << i << "/" << row << "\r" << std::flush;
 		    }
 		}
 	    }
 	}
+	if (verbose) {
+	    std::cout << std::endl;
+	}
 	ofs.close();
-    };
-};
+    }
+}
 
 #endif

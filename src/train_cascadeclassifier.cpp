@@ -41,24 +41,18 @@ int main(int argc, char *argv[])
     std::cout << "classifierNum: " << validatePositiveSampleSet.size() << std::endl;
     std::cout << "validatePositiveSampleNum: " << validatePositiveSampleSet[0].size() << std::endl << std::endl;
     
-    // 検証用非顔画像特徴量の読込み
-    /*std::cout << "Loading Validation Negative Sample Set..." << std::endl;
-    std::vector<std::vector<double> > validateNegativeSampleSet = file::loadmat<double>(argv[5]);
-    std::cout << "classifierNum: " << validateNegativeSampleSet.size() << std::endl;
-    std::cout << "validatePositiveSampleNum: " << validateNegativeSampleSet[0].size() << std::endl << std::endl;*/
-    
     // 学習用パラメータの設定
-    double minDetectionRate = 0.99;
+    double minDetectionRate = 0.9;
     double maxFalsePositiveRate = 0.5;
     int maxCascadeNum = 10;
     double maxTotalFalsePositiveRate = std::pow(maxFalsePositiveRate, static_cast<double>(maxCascadeNum));
     
     // カスケード識別器の学習
     CascadeClassifier model;
-    model.train(trainPositiveSampleSet, trainNegativeSampleSet, candidateSet,
-		validatePositiveSampleSet, //validateNegativeSampleSet,
-		minDetectionRate, maxFalsePositiveRate, maxTotalFalsePositiveRate,
-		maxCascadeNum);
+    model.train(candidateSet, trainPositiveSampleSet,
+		trainNegativeSampleSet, validatePositiveSampleSet,
+		minDetectionRate, maxFalsePositiveRate,
+		maxTotalFalsePositiveRate, maxCascadeNum);
     
     return 0;
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <fstream>
 #include "haar.h"
 
 class AdaBoost
@@ -14,10 +15,14 @@ public:
     void initialize(int classifierNum, int sampleNum,
 		    const std::vector<std::vector<double> > &sampleSet,
 		    const std::vector<int> &labelSet);
-    void train(int classifierNum,
-	       const std::vector<std::vector<double> > &sampleSet,
+    /*void train(int classifierNum,
+	       const std::vector<std::vector<double> > &trainPositiveSampleSet,
+	       const std::vector<std::vector<double> > &trainNegativeSampleSet,
+	       const std::vector<Haar> &candidateSet);*/
+    void train(const std::vector<std::vector<double> > &sampleSet,
 	       const std::vector<int> &labelSet,
-	       const std::vector<Haar> &candidateSet);
+	       const std::vector<Haar> &candidateSet,
+	       int maxClassifierNum);
     void trainOnce(const std::vector<std::vector<double> > &sampleSet,
 		   const std::vector<int> &labelSet,
 		   const std::vector<Haar> &candidateSet);
@@ -29,9 +34,17 @@ public:
 					      const std::vector<int> &labelSet,
 					      double targetDetectionRate);
     int classify(int index, const std::vector<std::vector<double> > &sampleSet);
+    int classify(double const * const * image);
+    
+    void loadfile(const char *filename);
+    void savefile(const char *filename);
+    
+    void load(std::ifstream &fin);
+    void save(std::ofstream &fout);
     
 private:
     void initializeWeight(const std::vector<int> &label);
+    void initializeWeight();
     void normalizeWeight();
     int classify(double value, double parity, double threshold);
     
@@ -60,7 +73,6 @@ private:
     
     int classifierNum_;
     int sampleNum_;
-    int category_[2];
     double threshold_;
     
     std::vector<Haar> classifier_;

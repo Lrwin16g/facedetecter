@@ -13,13 +13,17 @@ TARGET1 = $(EXEDIR)/extract_haar
 TARGET2 = $(EXEDIR)/train_haar_adaboost
 TARGET3 = $(EXEDIR)/create_haar_param
 TARGET4 = $(EXEDIR)/train_cascadeclassifier
+TARGET5 = $(EXEDIR)/test_haar_adaboost
+TEST1   = $(EXEDIR)/test_integral
 
-OBJ1 = $(OBJDIR)/extract_haar.o $(OBJDIR)/haar.o $(OBJDIR)/filelib.o
-OBJ2 = $(OBJDIR)/train_haar_adaboost.o $(OBJDIR)/adaboost.o $(OBJDIR)/haar.o $(OBJDIR)/filelib.o
-OBJ3 = $(OBJDIR)/create_haar_param.o $(OBJDIR)/haar.o $(OBJDIR)/filelib.o
-OBJ4 = $(OBJDIR)/train_cascadeclassifier.o $(OBJDIR)/cascadeclassifier.o $(OBJDIR)/adaboost.o $(OBJDIR)/haar.o $(OBJDIR)/filelib.o
+OBJ1 = $(OBJDIR)/extract_haar.o $(OBJDIR)/haar.o
+OBJ2 = $(OBJDIR)/train_haar_adaboost.o $(OBJDIR)/adaboost.o $(OBJDIR)/haar.o
+OBJ3 = $(OBJDIR)/create_haar_param.o $(OBJDIR)/haar.o
+OBJ4 = $(OBJDIR)/train_cascadeclassifier.o $(OBJDIR)/cascadeclassifier.o $(OBJDIR)/adaboost.o $(OBJDIR)/haar.o
+OBJ5 = $(OBJDIR)/test_integral.o $(OBJDIR)/haar.o
+OBJ6 = $(OBJDIR)/test_haar_adaboost.o $(OBJDIR)/adaboost.o $(OBJDIR)/haar.o
 
-all: $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4)
+all: $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(TARGET5) $(TEST1)
 
 $(TARGET1): $(OBJ1)
 	$(CC) $(LIBS) -o $(TARGET1) $^
@@ -32,6 +36,12 @@ $(TARGET3): $(OBJ3)
 
 $(TARGET4): $(OBJ4)
 	$(CC) $(LIBS) -o $(TARGET4) $^
+
+$(TARGET5): $(OBJ6)
+	$(CC) $(LIBS) -o $(TARGET5) $^
+
+$(TEST1): $(OBJ5)
+	$(CC) $(LIBS) -o $(TEST1) $^
 
 $(OBJDIR)/extract_haar.o: $(SRCDIR)/extract_haar.cpp
 	$(CC) $(CFLAGS) $(INCPATH) -c $< -o $@
@@ -54,8 +64,11 @@ $(OBJDIR)/adaboost.o: $(SRCDIR)/adaboost.cpp
 $(OBJDIR)/haar.o: $(SRCDIR)/haar.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)/filelib.o: $(SRCDIR)/filelib.cpp
+$(OBJDIR)/test_haar_adaboost.o: $(SRCDIR)/test_haar_adaboost.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/test_integral.o: ./test/test_integral.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(OBJDIR)/*.o
+	rm -f $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4) $(TARGET5) $(TEST1) $(OBJDIR)/*.o

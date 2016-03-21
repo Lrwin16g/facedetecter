@@ -10,12 +10,11 @@
 #include "haar.h"
 #include "filelib.h"
 
-const int categoryNum_ = 2;
+const int Category[2] = {1, -1};
 
 AdaBoost::AdaBoost()
     : classifierNum_(0), sampleNum_(0), threshold_(0.0)
 {
-    category_[0] = 1;	category_[1] = -1;
 }
 
 AdaBoost::~AdaBoost()
@@ -52,13 +51,30 @@ void AdaBoost::initialize(int classifierNum, int sampleNum,
     }
 }
 
-void AdaBoost::train(int classifierNum,
-		     const std::vector<std::vector<double> > &sampleSet,
-		     const std::vector<int> &labelSet,
+/*void AdaBoost::train(int classifierNum,
+		     const std::vector<std::vector<double> > &trainPositiveSampleSet,
+		     const std::vector<std::vector<double> > &trainNegativeSampleSet,
 		     const std::vector<Haar> &candidateSet)
 {
     classifierNum_ = classifierNum;
-    sampleNum_ = labelSet.size();
+    size_t trainPositiveSampleNum = trainPositiveSampleSet[0].size();
+    size_t trainNegativeSampleNum = trainNegativeSampleSet[0].size();
+    size_t candidateNum = candidateSet.size();    
+    sampleNum_ = trainPositiveSampleNum + trainNegativeSampleNum;
+    
+    std::vector<std::vector<double> > sampleSet(candidateNum);
+    for (size_t i = 0; i < candidateNum; ++i) {
+	std::copy(trainPositiveSampleSet[i].begin(), trainPositiveSampleSet[i].end(), back_inserter(sampleSet[i]));
+	std::copy(trainNegativeSampleSet[i].begin(), trainNegativeSampleSet[i].end(), back_inserter(sampleSet[i]));
+    }
+    
+    std::vector<int> labelSet(sampleNum_);
+    for (size_t i = 0; i < trainPositiveSampleNum; ++i) {
+	labelSet[i] = category_[0];
+    }
+    for (size_t i = trainPositiveSampleNum; i < sampleNum_; ++i) {
+	labelSet[i] = category_[1];
+    }
     
     classifier_.clear();
     classifier_.reserve(classifierNum_);
@@ -69,8 +85,8 @@ void AdaBoost::train(int classifierNum,
     initializeWeight(labelSet);
     
     // 整列済みサンプルの作成
-    std::vector<std::vector<Sample> > sortedSampleSet(candidateSet.size());
-    for (size_t i = 0; i < candidateSet.size(); ++i)
+    std::vector<std::vector<Sample> > sortedSampleSet(candidateNum);
+    for (size_t i = 0; i < candidateNum; ++i)
     {
 	sortedSampleSet[i].resize(sampleNum_);
 	for (int j = 0; j < sampleNum_; ++j)
@@ -78,10 +94,19 @@ void AdaBoost::train(int classifierNum,
 	    sortedSampleSet[i][j] = Sample(sampleSet[i][j], labelSet[j], j);
 	}
 	std::sort(sortedSampleSet[i].begin(), sortedSampleSet[i].end());
-    }
+    }*/
+void AdaBoost::train(const std::vector<std::vector<double> > &sampleSet,
+		     const std::vector<int> &labelSet,
+		     const std::vector<Haar> &candidateSet,
+		     int maxClassifierNum)
+{
+    std::cout << "---------- Training Start ----------" << std::endl << std::endl;
     
-    for (int i = 0; i < classifierNum_; ++i)
+    for (int i = 0; i < maxClassifierNum; ++i)
     {
+	trainOnce(sampleSet, labelSet, candidateSet);
+	
+	/*
 	// 重みの正規化
 	normalizeWeight();
 	
@@ -89,11 +114,11 @@ void AdaBoost::train(int classifierNum,
 	int idx = -1;
 	double parity;
 	double threshold;
-	for (size_t j = 0; j < candidateSet.size(); ++j)
+	for (size_t j = 0; j < classifierNum_; ++j)
 	{
 	    double p = 1.0;
 	    double theta = 0.0;
-	    double error = evaluateParameter(sampleSet[j], labelSet, sortedSampleSet[j], p, theta);
+	    double error = evaluateParameter(sampleSet[j], labelSet, sortedSampleSet_[j], p, theta);
 	    if (error < epsilon)
 	    {
 		epsilon = error;
@@ -102,11 +127,9 @@ void AdaBoost::train(int classifierNum,
 		threshold = theta;
 	    }
 	    
-	    if (j % 100 == 0) {
-	    //if (j % (candidateSet.size() / 100) == 0) {
-		int progress = j * 100 / candidateSet.size();
+	    if (j % (classifierNum_ / 100) == 0) {
+		int progress = j * 100 / classifierNum_;
 		std::cout << "training: " << progress << "%\r" << std::flush;
-		//std::cout << "training: " << j << "/" << candidateSet.size() << std::endl;
 	    }
 	}
 	
@@ -122,14 +145,20 @@ void AdaBoost::train(int classifierNum,
 	    weight_[j] *= exp(-alpha_[i] * static_cast<double>(labelSet[j] * classify(sampleSet[idx][j], parity, threshold)));
 	}
 	
-	std::cout << i + 1 << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
+	std::cout << classifier_.size() << ": classifier: " << idx << " alpha: " << alpha << " error: " << epsilon << std::endl;
+	
+	savefile("tmp_adaboost.param");*/
+	
+	/*std::cout << i + 1 << ": classifier: " << idx << " alpha: " << alpha_[i] << " error: " << epsilon << std::endl;
+	std::cout << "type: " << candidateSet[idx].type() << " x: " << candidateSet[idx].x() << " y: " << candidateSet[idx].y()
+		  << " width: " << candidateSet[idx].width() << " height: " << candidateSet[idx].height() << std::endl << std::endl;
 	
 	std::stringstream ss;
 	ss << std::setw(3) << std::setfill('0') << classifier_.size();
 	std::string filename_1 = "mit_cbcl_" + ss.str() + ".param";
 	std::string filename_2 = "mit_cbcl_" + ss.str() + ".alpha";
 	saveHaarFeatures(filename_1.c_str(), classifier_);
-	file::savefile(filename_2.c_str(), alpha_, false);
+	file::savefile(filename_2.c_str(), alpha_, false);*/
     }
 }
 
@@ -179,12 +208,7 @@ void AdaBoost::trainOnce(const std::vector<std::vector<double> > &sampleSet,
     
     std::cout << classifier_.size() << ": classifier: " << idx << " alpha: " << alpha << " error: " << epsilon << std::endl;
     
-    std::stringstream ss;
-	ss << std::setw(3) << std::setfill('0') << classifier_.size();
-	std::string filename_1 = "mit_cbcl_" + ss.str() + ".param";
-	std::string filename_2 = "mit_cbcl_" + ss.str() + ".alpha";
-	saveHaarFeatures(filename_1.c_str(), classifier_);
-	file::savefile(filename_2.c_str(), alpha_, false);
+    savefile("tmp_adaboost.param");
 }
 
 std::pair<double, double> AdaBoost::adjustThreshold(const std::vector<std::vector<double> > &validateSampleSet,
@@ -195,7 +219,7 @@ std::pair<double, double> AdaBoost::adjustThreshold(const std::vector<std::vecto
     // 顔サンプルと非顔サンプルの数の確認
     size_t positiveSampleNum = 0, negativeSampleNum = 0;
     for (size_t i = 0; i < labelSet.size(); ++i) {
-	if (labelSet[i] == category_[0]) {
+	if (labelSet[i] == Category[0]) {
 	    positiveSampleNum++;
 	} else {
 	    negativeSampleNum++;
@@ -299,7 +323,7 @@ std::pair<double, double> AdaBoost::adjustThreshold(const std::vector<std::vecto
 	    }
 	}
 	
-	if (labelSet[i] == category_[0]) {
+	if (labelSet[i] == Category[0]) {
 	    if (value >= threshold_) {
 		truePositiveNum++;
 	    } else {
@@ -355,6 +379,87 @@ int AdaBoost::classify(int index, const std::vector<std::vector<double> > &sampl
     }
 }
 
+int AdaBoost::classify(double const * const * image)
+{
+    double value = 0.0;
+    for (int i = 0; i < classifier_.size(); ++i)
+    {
+	if (classifier_[i].classify(image))
+	{
+	    value += alpha_[i];
+	}
+	else
+	{
+	    value -= alpha_[i];
+	}
+    }
+    
+    if (value >= 0.0) {
+	return Category[0];
+    } else {
+	return Category[1];
+    }
+}
+
+void AdaBoost::loadfile(const char *filename)
+{
+    std::ifstream fin(filename);
+    
+    load(fin);
+    
+    fin.close();
+}
+
+void AdaBoost::savefile(const char *filename)
+{
+    std::ofstream fout(filename);
+    
+    save(fout);
+    
+    fout.close();
+}
+
+void AdaBoost::load(std::ifstream &fin)
+{
+    classifier_.clear();
+    alpha_.clear();
+    
+    int count = 0;
+    fin >> count;
+    fin.ignore(256, '\n');
+    classifier_.resize(count);
+    alpha_.resize(count);
+    
+    fin >> threshold_;
+    fin.ignore(256, '\n');
+    
+    for (int i = 0; i < count; ++i) {
+	fin >> alpha_[i];
+    }
+    fin.ignore(256, '\n');
+    
+    for (int i = 0; i < count; ++i) {
+	classifier_[i].load(fin);
+    }
+    fin.ignore(256, '\n');
+}
+
+void AdaBoost::save(std::ofstream &fout)
+{
+    fout << classifier_.size() << std::endl;
+    fout << threshold_ << std::endl;
+    
+    for (size_t i = 0; i < classifier_.size(); ++i) {
+	fout << alpha_[i] << " ";
+    }
+    fout << std::endl;
+    
+    for (size_t i = 0; i < classifier_.size(); ++i) {
+	classifier_[i].save(fout);
+    }
+    fout << std::endl;
+}
+
 void AdaBoost::initializeWeight(const std::vector<int> &labelSet)
 {
     /*int sampleNumPerCategory[categoryNum_] = {0, 0};
@@ -396,9 +501,9 @@ void AdaBoost::normalizeWeight()
 int AdaBoost::classify(double value, double parity, double threshold)
 {
     if (value * parity > parity * threshold) {
-	return category_[0];
+	return Category[0];
     } else {
-	return category_[1];
+	return Category[1];
     }
 }
 

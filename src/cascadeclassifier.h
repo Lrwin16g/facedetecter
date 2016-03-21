@@ -10,15 +10,17 @@ public:
     CascadeClassifier();
     ~CascadeClassifier();
     
-    void train(const std::vector<std::vector<double> > &positiveSampleSet,
+    void train(const std::vector<Haar> &candidateSet,
+	       const std::vector<std::vector<double> > &positiveSampleSet,
 	       const std::vector<std::vector<double> > &negativeSampleSet,
-	       const std::vector<Haar> &candidateSet,
 	       const std::vector<std::vector<double> > &validatePositiveSampleSet,
-	       //const std::vector<std::vector<double> > &validateNegativeSampleSet,
 	       double minDetectionRate,
 	       double maxFalsePositiveRate,
 	       double maxTotalFalsePositiveRate,
 	       int maxCascadeNum);
+    
+    void loadfile(const char *filename);
+    void savefile(const char *filename);
     
 private:
     std::vector<AdaBoost> cascade_;

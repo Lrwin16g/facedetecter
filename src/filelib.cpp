@@ -1,4 +1,4 @@
-#include "filelib.h"
+/*#include "filelib.h"
 
 std::vector<std::string> file::split(const std::string &str, const char *delim)
 {
@@ -60,3 +60,4 @@ std::vector<std::vector<std::string> > file::loadfile(const char *filename, cons
     
     return data;
 }
+*/

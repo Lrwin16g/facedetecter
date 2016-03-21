@@ -2,6 +2,7 @@
 #define HAAR_H
 
 #include <vector>
+#include <fstream>
 
 // Haar-like特徴量クラス
 class Haar
@@ -15,6 +16,9 @@ public:
     double extract(double const * const * image);
     bool classify(double const * const * image);
     static bool isValidRange(int type, int x, int y, int width, int height, int rectWidth, int rectHeight);
+    
+    void load(std::ifstream &fin);
+    void save(std::ofstream &fout) const;
     
     Haar& operator=(const Haar &obj);
     

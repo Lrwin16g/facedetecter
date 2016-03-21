@@ -40,10 +40,12 @@ int main(int argc, char *argv[])
     
     // 特徴量抽出の開始
     double **src = new double*[height];
-    double **dst = new double*[height];
+    double **dst = new double*[height + 1];
     for (int i = 0; i < height; ++i) {
 	src[i] = new double[width];
-	dst[i] = new double[width];
+    }
+    for (int i = 0; i < height + 1; ++i) {
+	dst[i] = new double[width + 1];
     }
     
     std::vector<std::vector<double> > sample(classifierNum);
@@ -71,9 +73,10 @@ int main(int argc, char *argv[])
 	
 	if (i % 100 == 0)
 	{
-	    std::cout << "extracting: " << i << "/" << sampleNum << std::endl;
+	    std::cout << "extracting: " << i << "/" << sampleNum << "\r" << std::flush;
 	}
     }
+    std::cout << std::endl;
     
     // 特徴量抽出結果の保存
     file::savemat(argv[3], sample, true);
@@ -83,6 +86,8 @@ int main(int argc, char *argv[])
     
     for (int i = 0; i < height; ++i) {
 	delete[] src[i];
+    }
+    for (int i = 0; i < height + 1; ++i) {
 	delete[] dst[i];
     }
     delete[] src; src = NULL;
