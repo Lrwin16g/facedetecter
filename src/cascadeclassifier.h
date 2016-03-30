@@ -19,6 +19,8 @@ public:
 	       double maxTotalFalsePositiveRate,
 	       int maxCascadeNum);
     
+    int classify(double const * const * image);
+    
     void loadfile(const char *filename);
     void savefile(const char *filename);
     

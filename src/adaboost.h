@@ -15,10 +15,7 @@ public:
     void initialize(int classifierNum, int sampleNum,
 		    const std::vector<std::vector<double> > &sampleSet,
 		    const std::vector<int> &labelSet);
-    /*void train(int classifierNum,
-	       const std::vector<std::vector<double> > &trainPositiveSampleSet,
-	       const std::vector<std::vector<double> > &trainNegativeSampleSet,
-	       const std::vector<Haar> &candidateSet);*/
+    
     void train(const std::vector<std::vector<double> > &sampleSet,
 	       const std::vector<int> &labelSet,
 	       const std::vector<Haar> &candidateSet,
@@ -26,13 +23,11 @@ public:
     void trainOnce(const std::vector<std::vector<double> > &sampleSet,
 		   const std::vector<int> &labelSet,
 		   const std::vector<Haar> &candidateSet);
-    /*std::pair<double, double> adjustThreshold(const std::vector<std::vector<double> > &sampleSet,
-					      const std::vector<int> &labelSet,
-					      double targetDetectionRate);*/
     std::pair<double, double> adjustThreshold(const std::vector<std::vector<double> > &validateSampleSet,
 					      const std::vector<std::vector<double> > &trainSampleSet,
 					      const std::vector<int> &labelSet,
 					      double targetDetectionRate);
+    
     int classify(int index, const std::vector<std::vector<double> > &sampleSet);
     int classify(double const * const * image);
     

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+const int Category[2] = {1, -1};
+
 CascadeClassifier::CascadeClassifier()
 {
 }
@@ -119,6 +121,19 @@ void CascadeClassifier::train(const std::vector<Haar> &candidateSet,
     }
     
     savefile("final_cascade.param");
+}
+
+int CascadeClassifier::classify(double const * const * image)
+{
+    for (size_t i = 0; i < cascade_.size(); ++i)
+    {
+	if (cascade_[i].classify(image) == Category[1])
+	{
+	    return Category[1];
+	}
+    }
+    
+    return Category[0];
 }
 
 void CascadeClassifier::loadfile(const char *filename)
