@@ -26,7 +26,9 @@ int main(int argc, char *argv[])
     std::vector<cv::Mat> imageList;
     for (size_t i = 0; i < sampleNum; ++i)
     {
-	imageList.push_back(cv::imread(fileList[i], 0));
+	cv::Mat image = cv::imread(fileList[i], 0);
+	cv::equalizeHist(image, image);
+	imageList.push_back(image);
     }
     
     int width = imageList[0].cols;

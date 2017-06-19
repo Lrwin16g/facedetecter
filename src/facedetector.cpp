@@ -18,8 +18,10 @@ int main(int argc, char *argv[])
     
     // 入力画像の読込み
     cv::Mat image = cv::imread(argv[1], 0);
+    cv::equalizeHist(image, image);
     
-    CascadeClassifier classifier;
+    //CascadeClassifier classifier;
+    AdaBoost classifier;
     classifier.loadfile(argv[2]);
     
     int windowWidth = atoi(argv[3]);
@@ -41,28 +43,25 @@ int main(int argc, char *argv[])
 	dstImage[i] = new double[windowWidth + 1];
     }
     
-    /*double **windowImage = new double*[windowHeight + 1];
-    for (int i = 0; i < windowHeight + 1; ++i) {
-	windowImage[i] = new double[windowWidth + 1];
-    }*/
-    
-    for (double scale = 1.0; scale < 10; scale += 2.0)
+    for (double scale = 5.0; scale <= 5.0; scale += 1.0)
     {
-	
-	int width = windowWidth * scale;
-	int height = windowHeight * scale;
+	int width = imageWidth / scale;
+	int height = imageHeight / scale;
 	
 	std::cout << height << " " << width << std::endl;
 	
-	for (int y = 0; (y + height) < imageHeight; y += scanStep)
+	cv::Mat resizeImage(height, width, image.type());
+	cv::resize(image, resizeImage, resizeImage.size(), cv::INTER_CUBIC);
+	
+	for (int y = 0; (y + windowHeight) < height; y += scanStep)
 	{
-	    for (int x = 0; (x + width) < imageWidth; x += scanStep)
+	    for (int x = 0; (x + windowWidth) < width; x += scanStep)
 	    {
 		for (int v = 0; v < windowHeight; ++v)
 		{
 		    for (int u = 0; u < windowWidth; ++u)
 		    {
-			srcImage[v][u] = static_cast<double>(image.at<uchar>(y + static_cast<int>(v * scale), x + static_cast<int>(u * scale)));
+			srcImage[v][u] = static_cast<double>(resizeImage.at<uchar>(y + v, x + u));
 		    }
 		}
 		
@@ -71,7 +70,7 @@ int main(int argc, char *argv[])
 		if (classifier.classify(dstImage) == Category[0])
 		{
 		    std::cout << "y: " << y << "\tx: " << x << std::endl;
-		    cv::rectangle(image, cv::Point(x, y), cv::Point(x + width, y + height), cv::Scalar(0,0,200), 1, 4);
+		    cv::rectangle(image, cv::Point(x * scale, y * scale), cv::Point((x + windowWidth) * scale, (y + windowHeight) * scale), cv::Scalar(0,0,200), 1, 4);
 		}
 	    }
 	}
@@ -80,11 +79,6 @@ int main(int argc, char *argv[])
     cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE|CV_WINDOW_FREERATIO);
     cv::imshow("drawing", image);
     cv::waitKey(0);
-    
-    /*for (int i = 0; i < windowHeight + 1; ++i) {
-	delete[] windowImage[i];
-    }
-    delete[] windowImage;  windowImage = NULL;*/
     
     for (int i = 0; i < windowHeight; ++i) {
 	delete[] srcImage[i];
