@@ -17,17 +17,20 @@ int main(int argc, char *argv[])
     }
     
     // 入力画像の読込み
-    cv::Mat image = cv::imread(argv[1], 0);
+    cv::Mat src = cv::imread(argv[1]);
+    cv::Mat image;
+    cv::cvtColor(src, image, CV_RGB2GRAY);
     cv::equalizeHist(image, image);
     
     //CascadeClassifier classifier;
     AdaBoost classifier;
     classifier.loadfile(argv[2]);
+    classifier.setThreshold(5.0);
     
     int windowWidth = atoi(argv[3]);
     int windowHeight = atoi(argv[4]);
     
-    int scanStep = 2;
+    int scanStep = 1;
     
     int imageWidth = image.cols;
     int imageHeight = image.rows;
@@ -43,7 +46,7 @@ int main(int argc, char *argv[])
 	dstImage[i] = new double[windowWidth + 1];
     }
     
-    for (double scale = 5.0; scale <= 5.0; scale += 1.0)
+    for (double scale = 3.0; scale <= 10.0; scale *= 1.1)
     {
 	int width = imageWidth / scale;
 	int height = imageHeight / scale;
@@ -70,14 +73,15 @@ int main(int argc, char *argv[])
 		if (classifier.classify(dstImage) == Category[0])
 		{
 		    std::cout << "y: " << y << "\tx: " << x << std::endl;
-		    cv::rectangle(image, cv::Point(x * scale, y * scale), cv::Point((x + windowWidth) * scale, (y + windowHeight) * scale), cv::Scalar(0,0,200), 1, 4);
+		    cv::rectangle(src, cv::Point(x * scale, y * scale), cv::Point((x + windowWidth) * scale, (y + windowHeight) * scale), cv::Scalar(0,255,0), 1, 4);
 		}
 	    }
 	}
     }
     
     cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE|CV_WINDOW_FREERATIO);
-    cv::imshow("drawing", image);
+    cv::imshow("drawing", src);
+    cv::imwrite("result.bmp", src);
     cv::waitKey(0);
     
     for (int i = 0; i < windowHeight; ++i) {

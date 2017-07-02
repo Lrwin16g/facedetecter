@@ -256,6 +256,7 @@ int AdaBoost::classify(double const * const * image)
     }
     
     if (value >= threshold_) {
+	std::cout << value << "\t";
 	return Category[0];
     } else {
 	return Category[1];

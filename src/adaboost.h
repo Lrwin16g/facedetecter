@@ -37,6 +37,8 @@ public:
     void load(std::ifstream &fin);
     void save(std::ofstream &fout);
     
+    inline void setThreshold(double threshold) { threshold_ = threshold; }
+    
 private:
     void initializeWeight(const std::vector<int> &label);
     void initializeWeight();
